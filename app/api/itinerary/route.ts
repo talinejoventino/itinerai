@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
     if (!city?.name || !city?.country) {
       return NextResponse.json(
-        { error: "Cidade inválida. Forneça nome e país." },
+        { error: "Invalid city. Provide name and country." },
         { status: 400 }
       );
     }
@@ -50,10 +50,10 @@ export async function POST(req: NextRequest) {
 
     const text = completion.choices[0].message.content?.trim() ?? "";
 
-    // Extrair JSON mesmo se vier com texto extra
+    // Extract JSON even if it comes with extra text
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
-      throw new Error("IA não retornou JSON válido");
+      throw new Error("AI did not return valid JSON");
     }
 
     const itinerary: Itinerary = JSON.parse(jsonMatch[0]);
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
     console.error("[/api/itinerary] Erro:", error);
 
     const message =
-      error instanceof Error ? error.message : "Erro interno do servidor";
+      error instanceof Error ? error.message : "Internal server error";
 
     return NextResponse.json({ error: message }, { status: 500 });
   }

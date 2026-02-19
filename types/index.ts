@@ -6,12 +6,18 @@ export interface City {
   displayName: string;
 }
 
+export interface Country {
+  name: string;
+  code: string;
+}
+
 export interface NominatimResult {
   place_id: number;
   display_name: string;
   name: string;
   lat: string;
   lon: string;
+  boundingbox?: [string, string, string, string]; // [south, north, west, east]
   address: {
     city?: string;
     town?: string;

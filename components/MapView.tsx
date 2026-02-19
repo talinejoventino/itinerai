@@ -1,70 +1,50 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useRef, useCallback, useEffect, useState } from "react";
+import Map, { Marker, MapRef } from "react-map-gl/maplibre";
+import type { MapLayerMouseEvent } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
 import type { City } from "@/types";
 import { reverseGeocode } from "@/lib/nominatim";
+import { itineraiMapStyle } from "@/lib/map-style";
 
-// Fix Leaflet icon issue with Next.js
-delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
+const CITY_LAYERS = ["label-capital", "label-city", "label-town"];
 
-// Custom animated marker icon
-const createCustomIcon = () =>
-  L.divIcon({
-    className: "",
-    html: `
-      <div style="
-        position: relative;
-        width: 36px;
-        height: 36px;
-      ">
-        <div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -50%);
-          width: 36px;
-          height: 36px;
-          background: #6366f1;
-          border-radius: 50% 50% 50% 0;
-          transform: translate(-50%, -50%) rotate(-45deg);
-          box-shadow: 0 4px 12px rgba(99,102,241,0.5);
-          border: 3px solid white;
-        "></div>
-        <div style="
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -55%);
-          font-size: 14px;
-          z-index: 10;
-        ">📍</div>
+// Custom marker matching design system colors
+function CustomMarker() {
+  return (
+    <div className="relative w-10 h-10 cursor-pointer">
+      {/* Glow ring */}
+      <div
+        className="absolute inset-0 rounded-full animate-ping"
+        style={{
+          background: "rgba(74,127,167,0.3)",
+          animationDuration: "2s",
+        }}
+      />
+      {/* Pin body */}
+      <div
+        className="absolute top-1/2 left-1/2 w-9 h-9 border-2 border-white"
+        style={{
+          background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
+          borderRadius: "50% 50% 50% 0",
+          transform: "translate(-50%, -60%) rotate(-45deg)",
+          boxShadow: "0 0 24px rgba(74,127,167,0.5), 0 4px 12px rgba(10,25,49,0.4)",
+        }}
+      />
+      {/* Pin icon */}
+      <div
+        className="absolute text-sm z-10"
+        style={{
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -70%)",
+        }}
+      >
+        📍
       </div>
-    `,
-    iconSize: [36, 36],
-    iconAnchor: [18, 36],
-    popupAnchor: [0, -40],
-  });
-
-interface FlyToProps {
-  city: City | null;
-}
-
-function FlyToCity({ city }: FlyToProps) {
-  const map = useMap();
-  useEffect(() => {
-    if (city) {
-      map.flyTo([city.lat, city.lng], 12, { duration: 1.5 });
-    }
-  }, [city, map]);
-  return null;
+    </div>
+  );
 }
 
 interface MapViewProps {
@@ -73,61 +53,79 @@ interface MapViewProps {
 }
 
 export default function MapView({ selectedCity, onCityClick }: MapViewProps) {
-  const handleMapClick = async (lat: number, lng: number) => {
-    const city = await reverseGeocode(lat, lng);
-    if (city) {
-      onCityClick(city);
+  const mapRef = useRef<MapRef>(null);
+  const [cursor, setCursor] = useState<string>("grab");
+
+  // FlyTo animation when selectedCity changes
+  useEffect(() => {
+    if (selectedCity && mapRef.current) {
+      mapRef.current.flyTo({
+        center: [selectedCity.lng, selectedCity.lat],
+        zoom: 12,
+        duration: 1500,
+        essential: true,
+      });
     }
-  };
+  }, [selectedCity]);
+
+  // Change cursor to pointer when hovering over a city label
+  const handleMouseMove = useCallback((event: MapLayerMouseEvent) => {
+    if (!mapRef.current) return;
+    const { x, y } = event.point;
+    const features = mapRef.current.queryRenderedFeatures(
+      [[x - 3, y - 3], [x + 3, y + 3]],
+      { layers: CITY_LAYERS }
+    );
+    setCursor(features.length > 0 ? "pointer" : "grab");
+  }, []);
+
+  // Click on a city label to select it
+  const handleMapClick = useCallback(
+    async (event: MapLayerMouseEvent) => {
+      if (!mapRef.current) return;
+      const { x, y } = event.point;
+      const features = mapRef.current.queryRenderedFeatures(
+        [[x - 5, y - 5], [x + 5, y + 5]],
+        { layers: CITY_LAYERS }
+      );
+      if (features.length === 0) return;
+
+      const feature = features[0];
+      const coords = (feature.geometry as unknown as { coordinates: [number, number] }).coordinates;
+      const city = await reverseGeocode(coords[1], coords[0]);
+      if (city) onCityClick(city);
+    },
+    [onCityClick]
+  );
 
   return (
-    <MapContainer
-      center={[20, 0]}
-      zoom={3}
-      className="w-full h-full"
-      style={{ height: "100%", width: "100%" }}
-      zoomControl={false}
+    <Map
+      ref={mapRef}
+      initialViewState={{
+        longitude: 0,
+        latitude: 20,
+        zoom: 3,
+      }}
+      style={{ width: "100%", height: "100%" }}
+      mapStyle={itineraiMapStyle}
+      cursor={cursor}
+      onClick={handleMapClick}
+      onMouseMove={handleMouseMove}
+      scrollZoom={true}
+      dragRotate={false}
+      pitchWithRotate={false}
+      touchPitch={false}
+      attributionControl={true}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <MapClickHandler onMapClick={handleMapClick} />
-      <FlyToCity city={selectedCity} />
       {selectedCity && (
         <Marker
-          position={[selectedCity.lat, selectedCity.lng]}
-          icon={createCustomIcon()}
+          longitude={selectedCity.lng}
+          latitude={selectedCity.lat}
+          anchor="bottom"
         >
-          <Popup>
-            <div className="text-center font-semibold">
-              {selectedCity.name}, {selectedCity.country}
-            </div>
-          </Popup>
+          <CustomMarker />
         </Marker>
       )}
-    </MapContainer>
+    </Map>
   );
-}
-
-interface MapClickHandlerProps {
-  onMapClick: (lat: number, lng: number) => void;
-}
-
-function MapClickHandler({ onMapClick }: MapClickHandlerProps) {
-  const map = useMap();
-  const handlerRef = useRef(onMapClick);
-  handlerRef.current = onMapClick;
-
-  useEffect(() => {
-    const handler = (e: L.LeafletMouseEvent) => {
-      handlerRef.current(e.latlng.lat, e.latlng.lng);
-    };
-    map.on("click", handler);
-    return () => {
-      map.off("click", handler);
-    };
-  }, [map]);
-
-  return null;
 }

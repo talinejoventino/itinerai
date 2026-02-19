@@ -10,7 +10,7 @@ export async function searchCities(query: string): Promise<City[]> {
     format: "json",
     limit: "6",
     featuretype: "city",
-    "accept-language": "pt-BR,pt,en",
+    "accept-language": "en",
   });
 
   const res = await fetch(`${NOMINATIM_BASE}/search?${params}`, {
@@ -38,7 +38,7 @@ export async function reverseGeocode(lat: number, lng: number): Promise<City | n
     lon: lng.toString(),
     format: "json",
     zoom: "10",
-    "accept-language": "pt-BR,pt,en",
+    "accept-language": "en",
   });
 
   const res = await fetch(`${NOMINATIM_BASE}/reverse?${params}`, {

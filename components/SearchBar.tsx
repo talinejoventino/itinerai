@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Search, MapPin, Loader2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { searchCities } from "@/lib/nominatim";
 import type { City } from "@/types";
 
@@ -16,6 +15,7 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
   const [results, setResults] = useState<City[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const [focused, setFocused] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -61,6 +61,7 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setOpen(false);
+        setFocused(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -68,38 +69,126 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
   }, []);
 
   return (
-    <div ref={containerRef} className="relative w-full max-w-md">
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-        <Input
+    <div ref={containerRef} className="relative w-full">
+      {/* Input wrapper */}
+      <div
+        className="relative flex items-center transition-all duration-200"
+        style={{
+          height: "56px",
+          background: "rgba(246,250,253,0.1)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          border: focused
+            ? "1.5px solid #4A7FA7"
+            : "1.5px solid rgba(179,207,229,0.2)",
+          borderRadius: open && results.length > 0 ? "28px 28px 0 0" : "999px",
+          boxShadow: focused
+            ? "0 0 24px rgba(74,127,167,0.25), 0 4px 20px rgba(10,25,49,0.18)"
+            : "0 4px 20px rgba(10,25,49,0.18)",
+        }}
+      >
+        {/* Search icon */}
+        <div className="absolute left-5 flex items-center pointer-events-none">
+          <Search
+            className="h-4 w-4 transition-colors duration-200"
+            style={{ color: focused ? "#4A7FA7" : "rgba(179,207,229,0.5)" }}
+          />
+        </div>
+
+        <input
+          type="text"
           value={query}
           onChange={handleChange}
-          onFocus={() => results.length > 0 && setOpen(true)}
-          placeholder="Pesquisar uma cidade..."
-          className="pl-9 pr-4 bg-white/95 backdrop-blur border-0 shadow-lg rounded-xl h-11 text-sm focus-visible:ring-indigo-500"
+          onFocus={() => {
+            setFocused(true);
+            if (results.length > 0) setOpen(true);
+          }}
+          onBlur={() => setFocused(false)}
+          placeholder="Search for a city..."
+          className="w-full bg-transparent outline-none border-none"
+          style={{
+            paddingLeft: "52px",
+            paddingRight: "52px",
+            height: "56px",
+            fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+            fontSize: "15px",
+            color: "#F6FAFD",
+          }}
+          autoComplete="off"
+          spellCheck={false}
         />
+
+        {/* Loader */}
         {loading && (
-          <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-indigo-500 animate-spin" />
+          <div className="absolute right-5">
+            <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#4A7FA7" }} />
+          </div>
         )}
       </div>
 
+      {/* Dropdown results */}
       {open && results.length > 0 && (
-        <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-[1000]">
+        <div
+          className="absolute top-full left-0 right-0 overflow-hidden z-[1000]"
+          style={{
+            background: "rgba(10,25,49,0.97)",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            border: "1.5px solid #4A7FA7",
+            borderTop: "1px solid rgba(179,207,229,0.1)",
+            borderRadius: "0 0 20px 20px",
+            maxHeight: "320px",
+            overflowY: "auto",
+            boxShadow: "0 8px 40px rgba(10,25,49,0.4)",
+          }}
+        >
           {results.map((city, i) => (
             <button
               key={i}
               onClick={() => handleSelect(city)}
-              className="w-full flex items-start gap-3 px-4 py-3 hover:bg-indigo-50 transition-colors text-left group"
+              className="w-full flex items-start gap-3 text-left transition-colors duration-150"
+              style={{
+                padding: "14px 20px",
+                minHeight: "52px",
+                borderBottom: i < results.length - 1 ? "1px solid rgba(179,207,229,0.06)" : "none",
+              }}
+              onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "rgba(74,127,167,0.15)";
+              }}
+              onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.background = "transparent";
+              }}
             >
-              <MapPin className="h-4 w-4 text-indigo-400 mt-0.5 shrink-0 group-hover:text-indigo-600" />
+              <MapPin
+                className="h-4 w-4 mt-0.5 shrink-0 transition-colors"
+                style={{ color: "rgba(179,207,229,0.5)" }}
+              />
               <div className="min-w-0">
-                <div className="font-medium text-gray-800 text-sm truncate">
+                <div
+                  className="font-medium truncate"
+                  style={{
+                    fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                    fontSize: "14px",
+                    color: "#F6FAFD",
+                  }}
+                >
                   {city.name}
                   {city.country && (
-                    <span className="text-gray-400 font-normal">, {city.country}</span>
+                    <span style={{ color: "rgba(179,207,229,0.5)", fontWeight: 400 }}>
+                      , {city.country}
+                    </span>
                   )}
                 </div>
-                <div className="text-xs text-gray-400 truncate mt-0.5">{city.displayName}</div>
+                <div
+                  className="truncate mt-0.5"
+                  style={{
+                    fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                    fontSize: "12px",
+                    color: "rgba(179,207,229,0.4)",
+                  }}
+                >
+                  {city.displayName}
+                </div>
               </div>
             </button>
           ))}

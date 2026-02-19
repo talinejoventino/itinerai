@@ -1,15 +1,31 @@
 import type { Metadata } from "next";
-import { Geist } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Serif_Display, Outfit } from "next/font/google";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist-sans",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-display",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const dmSerif = DM_Serif_Display({
+  variable: "--font-editorial",
+  subsets: ["latin"],
+  weight: ["400"],
+  display: "swap",
+});
+
+const outfit = Outfit({
+  variable: "--font-body",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Itinerai — Roteiros de Turismo",
-  description: "Explore o mundo e gere roteiros de turismo personalizados",
+  title: "ItinerAI — Travel Itineraries",
+  description: "Explore the world and generate personalized travel itineraries",
 };
 
 export default function RootLayout({
@@ -18,8 +34,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR">
-      <body className={`${geist.variable} antialiased`}>{children}</body>
+    <html lang="en">
+      <body
+        className={`${plusJakarta.variable} ${dmSerif.variable} ${outfit.variable} antialiased`}
+      >
+        {children}
+      </body>
     </html>
   );
 }

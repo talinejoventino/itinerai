@@ -1,35 +1,35 @@
 import type { City } from "@/types";
 
 export function buildItineraryPrompt(city: City): string {
-  return `Você é um especialista em turismo com conhecimento atualizado sobre destinos ao redor do mundo.
+  return `You are a tourism expert with up-to-date knowledge about destinations around the world.
 
-Crie roteiros de turismo detalhados e práticos para **${city.name}, ${city.country}**.
+Create detailed and practical travel itineraries for **${city.name}, ${city.country}**.
 
-Retorne APENAS um JSON válido, sem texto adicional, com esta estrutura exata:
+Return ONLY valid JSON, without any additional text, with this exact structure:
 
 {
   "city": "${city.name}",
   "country": "${city.country}",
   "highlights": [
-    "Nome do ponto turístico 1",
-    "Nome do ponto turístico 2",
-    "Nome do ponto turístico 3",
-    "Nome do ponto turístico 4",
-    "Nome do ponto turístico 5"
+    "Tourist attraction name 1",
+    "Tourist attraction name 2",
+    "Tourist attraction name 3",
+    "Tourist attraction name 4",
+    "Tourist attraction name 5"
   ],
   "itineraries": {
     "1day": {
-      "title": "O Melhor de ${city.name} em 1 Dia",
+      "title": "Best of ${city.name} in 1 Day",
       "days": [
         {
           "day": 1,
-          "theme": "Destaques Essenciais",
+          "theme": "Essential Highlights",
           "activities": [
             {
               "time": "09:00",
-              "title": "Nome do local",
-              "description": "Descrição do que fazer e ver neste local.",
-              "tip": "Dica prática (preço, horário, como chegar, reserva, etc.)",
+              "title": "Location name",
+              "description": "Description of what to do and see at this location.",
+              "tip": "Practical tip (price, hours, how to get there, reservation, etc.)",
               "emoji": "🏛️"
             }
           ]
@@ -37,31 +37,31 @@ Retorne APENAS um JSON válido, sem texto adicional, com esta estrutura exata:
       ]
     },
     "3days": {
-      "title": "Explorando ${city.name} em 3 Dias",
+      "title": "Exploring ${city.name} in 3 Days",
       "days": [
         {
           "day": 1,
-          "theme": "Tema do dia 1",
+          "theme": "Day 1 theme",
           "activities": [...]
         },
         {
           "day": 2,
-          "theme": "Tema do dia 2",
+          "theme": "Day 2 theme",
           "activities": [...]
         },
         {
           "day": 3,
-          "theme": "Tema do dia 3",
+          "theme": "Day 3 theme",
           "activities": [...]
         }
       ]
     },
     "7days": {
-      "title": "Imersão Completa em ${city.name}: 7 Dias",
+      "title": "Complete ${city.name} Immersion: 7 Days",
       "days": [
         {
           "day": 1,
-          "theme": "Tema do dia 1",
+          "theme": "Day 1 theme",
           "activities": [...]
         }
       ]
@@ -69,13 +69,13 @@ Retorne APENAS um JSON válido, sem texto adicional, com esta estrutura exata:
   }
 }
 
-Regras importantes:
-- Cada roteiro de 1 dia deve ter 5 a 6 atividades
-- Cada dia no roteiro de 3 dias deve ter 4 a 5 atividades
-- Cada dia no roteiro de 7 dias deve ter 3 a 4 atividades
-- Inclua emojis relevantes para cada atividade
-- Horários devem ser realistas e considerar tempo de deslocamento
-- Dicas devem ser práticas e úteis (preços aproximados, dicas de transporte, etc.)
-- Use linguagem em Português do Brasil
-- Retorne APENAS o JSON, sem markdown, sem texto antes ou depois`;
+Important rules:
+- Each 1-day itinerary should have 5 to 6 activities
+- Each day in the 3-day itinerary should have 4 to 5 activities
+- Each day in the 7-day itinerary should have 3 to 4 activities
+- Include relevant emojis for each activity
+- Times should be realistic and consider travel time
+- Tips should be practical and useful (approximate prices, transportation tips, etc.)
+- Use English language
+- Return ONLY the JSON, without markdown, without text before or after`;
 }

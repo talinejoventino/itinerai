@@ -2,20 +2,21 @@
 
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
+import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, Globe, Loader2, AlertCircle, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import SearchBar from "@/components/SearchBar";
 import ItineraryPanel from "@/components/ItineraryPanel";
 import type { City, Itinerary } from "@/types";
 
-// Leaflet must be loaded client-side only
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
   loading: () => (
-    <div className="w-full h-full flex items-center justify-center bg-slate-900">
-      <div className="flex flex-col items-center gap-3 text-white/60">
-        <Globe className="w-8 h-8 animate-pulse" />
-        <p className="text-sm">Carregando mapa...</p>
+    <div className="w-full h-full flex items-center justify-center" style={{ background: "#0A1931" }}>
+      <div className="flex flex-col items-center gap-3" style={{ color: "rgba(179,207,229,0.6)" }}>
+        <Globe className="w-8 h-8 animate-pulse" style={{ color: "#4A7FA7" }} />
+        <p style={{ fontFamily: "var(--font-body, Outfit, sans-serif)", fontSize: "14px" }}>
+          Loading map...
+        </p>
       </div>
     </div>
   ),
@@ -53,155 +54,328 @@ export default function HomePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.error || "Erro ao gerar roteiro");
+        throw new Error(data.error || "Error generating itinerary");
       }
 
       setItinerary(data);
       setState("done");
       setPanelOpen(true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido";
+      const msg = err instanceof Error ? err.message : "Unknown error";
       setError(msg);
       setState("error");
     }
   };
 
-  const handleClosePanel = () => {
-    setPanelOpen(false);
-  };
-
   return (
-    <div className="relative w-screen h-screen overflow-hidden">
-      {/* Full-screen map */}
-      <div className="absolute inset-0 z-0">
-        <MapView selectedCity={selectedCity} onCityClick={handleCitySelect} />
-      </div>
+    <div className="relative w-screen h-screen overflow-hidden" style={{ background: "#0A1931" }}>
 
-      {/* Floating header */}
-      <header className="absolute top-0 left-0 right-0 z-[500] pointer-events-none">
-        <div className="flex items-center justify-between p-4 gap-4">
+      {/* ── Full-screen map ── */}
+      <motion.div
+        className="absolute inset-0 z-0"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.8 }}
+      >
+        <MapView
+          selectedCity={selectedCity}
+          onCityClick={handleCitySelect}
+        />
+      </motion.div>
+
+      {/* ── Floating header ── */}
+      <motion.header
+        className="absolute top-0 left-0 right-0 z-[500] pointer-events-none"
+        initial={{ y: -80, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.5, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <div className="flex items-center gap-3 p-4">
           {/* Logo */}
-          <div className="pointer-events-auto flex items-center gap-2 bg-white/95 backdrop-blur rounded-xl px-4 py-2.5 shadow-lg shrink-0">
-            <div className="w-7 h-7 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+          <div
+            className="pointer-events-auto flex items-center gap-2.5 shrink-0 px-4 py-2.5"
+            style={{
+              background: "rgba(246,250,253,0.08)",
+              backdropFilter: "blur(20px)",
+              WebkitBackdropFilter: "blur(20px)",
+              border: "1px solid rgba(179,207,229,0.2)",
+              borderRadius: "20px",
+              boxShadow: "0 4px 20px rgba(10,25,49,0.18)",
+            }}
+          >
+            <div
+              className="w-7 h-7 flex items-center justify-center"
+              style={{
+                background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
+                borderRadius: "10px",
+              }}
+            >
               <Globe className="w-4 h-4 text-white" />
             </div>
-            <span className="font-bold text-gray-800 text-base tracking-tight">
-              Itiner<span className="text-indigo-600">ai</span>
+            <span
+              className="font-bold text-base tracking-tight"
+              style={{
+                fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                color: "#F6FAFD",
+              }}
+            >
+              Itiner<span style={{ color: "#4A7FA7" }}>AI</span>
             </span>
           </div>
 
           {/* Search bar */}
-          <div className="pointer-events-auto flex-1 max-w-md">
+          <div className="pointer-events-auto flex-1 max-w-[480px]">
             <SearchBar onCitySelect={handleCitySelect} selectedCity={selectedCity} />
           </div>
-
-          {/* Spacer for symmetry */}
-          <div className="w-28 shrink-0 hidden sm:block" />
         </div>
-      </header>
+      </motion.header>
 
-      {/* Generate button - bottom center */}
-      {selectedCity && !panelOpen && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[500]">
-          <div className="flex flex-col items-center gap-2">
-            {/* City badge */}
-            <div className="bg-white/95 backdrop-blur text-gray-700 rounded-full px-4 py-1.5 text-sm font-medium shadow-md flex items-center gap-1.5">
-              <span className="text-base">📍</span>
-              {selectedCity.name}, {selectedCity.country}
-            </div>
-
-            {/* Error message */}
-            {state === "error" && error && (
-              <div className="flex items-center gap-2 bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-2.5 text-sm max-w-sm">
-                <AlertCircle className="h-4 w-4 shrink-0" />
-                <span>{error}</span>
-                <button onClick={() => setError(null)}>
-                  <X className="h-3.5 w-3.5 ml-1 opacity-60 hover:opacity-100" />
-                </button>
-              </div>
-            )}
-
-            {/* Main CTA */}
-            <Button
-              onClick={handleGenerate}
-              disabled={state === "loading"}
-              size="lg"
-              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-2xl shadow-indigo-500/40 rounded-2xl px-8 h-14 text-base font-semibold transition-all duration-200 disabled:opacity-80"
-            >
-              {state === "loading" ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Gerando roteiro...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 h-5 w-5" />
-                  Gerar Roteiro com IA
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Instructions when no city selected */}
-      {!selectedCity && (
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-[500] pointer-events-none">
-          <div className="bg-white/90 backdrop-blur rounded-2xl px-6 py-4 shadow-xl text-center max-w-xs">
-            <p className="text-gray-700 text-sm font-medium">
-              🗺️ Clique no mapa ou pesquise uma cidade para começar
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Itinerary panel - slides from right */}
-      <div
-        className={`absolute top-0 right-0 h-full w-full sm:w-96 z-[600] transition-transform duration-500 ease-in-out ${
-          panelOpen && itinerary ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {itinerary && selectedCity && (
-          <ItineraryPanel
-            city={selectedCity}
-            itinerary={itinerary}
-            onClose={handleClosePanel}
-          />
-        )}
-      </div>
-
-      {/* Loading overlay */}
-      {state === "loading" && (
-        <div className="absolute inset-0 z-[550] bg-black/20 backdrop-blur-[2px] flex items-center justify-center pointer-events-none">
-          <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-3 max-w-xs mx-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white animate-pulse" />
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-gray-800">Criando seu roteiro</p>
-              <p className="text-sm text-gray-500 mt-1">
-                A IA está preparando a melhor experiência em {selectedCity?.name}...
-              </p>
-            </div>
-            <Loader2 className="h-5 w-5 text-indigo-500 animate-spin" />
-          </div>
-        </div>
-      )}
-
-      {/* Reopen panel button when panel is closed but itinerary exists */}
-      {itinerary && !panelOpen && selectedCity && (
-        <div className="absolute top-1/2 right-0 -translate-y-1/2 z-[500]">
-          <button
-            onClick={() => setPanelOpen(true)}
-            className="bg-indigo-600 text-white rounded-l-xl px-2 py-4 shadow-lg hover:bg-indigo-700 transition-colors flex flex-col items-center gap-1"
-            title="Ver roteiro"
+      {/* ── Bottom CTA area ── */}
+      <AnimatePresence mode="wait">
+        {selectedCity && !panelOpen ? (
+          // Phase 3: city selected — show generate CTA
+          <motion.div
+            key="cta"
+            className="absolute bottom-8 left-1/2 z-[500]"
+            style={{ x: "-50%" }}
+            initial={{ y: 40, opacity: 0, scale: 0.9 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 40, opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
           >
-            <span className="text-xs font-medium [writing-mode:vertical-rl] rotate-180">
-              Ver Roteiro
-            </span>
-          </button>
-        </div>
-      )}
+            <div className="flex flex-col items-center gap-3">
+              {/* City badge */}
+              <div
+                className="flex items-center gap-2 px-5 py-2"
+                style={{
+                  background: "rgba(246,250,253,0.1)",
+                  backdropFilter: "blur(20px)",
+                  WebkitBackdropFilter: "blur(20px)",
+                  border: "1px solid rgba(179,207,229,0.2)",
+                  borderRadius: "999px",
+                  boxShadow: "0 4px 20px rgba(10,25,49,0.18)",
+                  fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                  fontSize: "13px",
+                  fontWeight: 500,
+                  color: "#B3CFE5",
+                }}
+              >
+                <span>📍</span>
+                <span>{selectedCity.name}, {selectedCity.country}</span>
+              </div>
+
+              {/* Error message */}
+              <AnimatePresence>
+                {state === "error" && error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    className="flex items-center gap-2 px-4 py-2.5 text-sm max-w-sm"
+                    style={{
+                      background: "rgba(220,38,38,0.15)",
+                      border: "1px solid rgba(220,38,38,0.3)",
+                      borderRadius: "14px",
+                      color: "#fca5a5",
+                      fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                    }}
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                    <button onClick={() => setError(null)} className="ml-1 opacity-60 hover:opacity-100 transition-opacity">
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Generate CTA */}
+              <motion.button
+                onClick={handleGenerate}
+                disabled={state === "loading"}
+                className="flex items-center gap-2.5 text-white font-semibold disabled:opacity-70"
+                style={{
+                  background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
+                  borderRadius: "14px",
+                  padding: "0 28px",
+                  height: "52px",
+                  fontSize: "15px",
+                  fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                  boxShadow: "0 0 24px rgba(74,127,167,0.35), 0 4px 20px rgba(10,25,49,0.18)",
+                  border: "none",
+                  cursor: state === "loading" ? "not-allowed" : "pointer",
+                }}
+                whileHover={{ scale: 1.02, boxShadow: "0 0 32px rgba(74,127,167,0.5), 0 4px 20px rgba(10,25,49,0.25)" }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                {state === "loading" ? (
+                  <>
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                    Generating itinerary...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-5 w-5" />
+                    Generate AI Itinerary
+                  </>
+                )}
+              </motion.button>
+            </div>
+          </motion.div>
+        ) : !selectedCity ? (
+          // No city selected — prompt to click a city label
+          <motion.div
+            key="hint"
+            className="absolute bottom-8 left-1/2 z-[500] pointer-events-none"
+            style={{ x: "-50%" }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 10 }}
+            transition={{ duration: 0.4, delay: 0.6 }}
+          >
+            <div
+              className="flex items-center gap-2 px-6 py-3.5 text-center"
+              style={{
+                background: "rgba(246,250,253,0.08)",
+                backdropFilter: "blur(20px)",
+                WebkitBackdropFilter: "blur(20px)",
+                border: "1px solid rgba(179,207,229,0.15)",
+                borderRadius: "20px",
+                boxShadow: "0 4px 20px rgba(10,25,49,0.18)",
+                fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                fontSize: "14px",
+                fontWeight: 500,
+                color: "rgba(179,207,229,0.7)",
+                whiteSpace: "nowrap",
+              }}
+            >
+              🌍 Click on a city name on the map
+            </div>
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
+
+      {/* ── Itinerary sidebar ── */}
+      <AnimatePresence>
+        {panelOpen && itinerary && selectedCity && (
+          <motion.div
+            className="absolute top-0 right-0 h-full w-full sm:w-[420px] z-[600]"
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <ItineraryPanel
+              city={selectedCity}
+              itinerary={itinerary}
+              onClose={() => setPanelOpen(false)}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Loading overlay ── */}
+      <AnimatePresence>
+        {state === "loading" && (
+          <motion.div
+            className="absolute inset-0 z-[550] flex items-center justify-center pointer-events-none"
+            style={{ background: "rgba(10,25,49,0.5)", backdropFilter: "blur(4px)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <motion.div
+              className="flex flex-col items-center gap-4 p-8 mx-4"
+              style={{
+                background: "rgba(10,25,49,0.97)",
+                backdropFilter: "blur(40px)",
+                border: "1px solid rgba(179,207,229,0.15)",
+                borderRadius: "28px",
+                boxShadow: "0 8px 40px rgba(10,25,49,0.5)",
+                maxWidth: "320px",
+                width: "100%",
+              }}
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ duration: 0.3, ease: [0.34, 1.56, 0.64, 1] }}
+            >
+              <div
+                className="w-14 h-14 flex items-center justify-center"
+                style={{
+                  background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
+                  borderRadius: "18px",
+                }}
+              >
+                <Sparkles className="w-7 h-7 text-white animate-pulse" />
+              </div>
+              <div className="text-center">
+                <p
+                  className="font-semibold text-base"
+                  style={{
+                    fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                    color: "#F6FAFD",
+                  }}
+                >
+                  Creating your itinerary
+                </p>
+                <p
+                  className="mt-1.5 text-sm"
+                  style={{
+                    fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                    color: "rgba(179,207,229,0.6)",
+                  }}
+                >
+                  AI is preparing the best experience in {selectedCity?.name}...
+                </p>
+              </div>
+              <Loader2 className="h-5 w-5 animate-spin" style={{ color: "#4A7FA7" }} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Reopen panel tab ── */}
+      <AnimatePresence>
+        {itinerary && !panelOpen && selectedCity && (
+          <motion.div
+            className="absolute top-1/2 right-0 z-[500]"
+            style={{ y: "-50%" }}
+            initial={{ x: 40, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 40, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+          >
+            <button
+              onClick={() => setPanelOpen(true)}
+              className="flex flex-col items-center gap-1 px-2 py-4 transition-colors"
+              style={{
+                background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
+                borderRadius: "14px 0 0 14px",
+                boxShadow: "-4px 0 20px rgba(10,25,49,0.3)",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+              }}
+              title="View itinerary"
+            >
+              <span
+                className="text-xs font-medium"
+                style={{
+                  fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                  writingMode: "vertical-rl",
+                  transform: "rotate(180deg)",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                View Itinerary
+              </span>
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
