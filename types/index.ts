@@ -36,6 +36,8 @@ export interface Activity {
   description: string;
   tip?: string;
   emoji?: string;
+  lat?: number;  // AI-provided GPS latitude (optional)
+  lng?: number;  // AI-provided GPS longitude (optional)
 }
 
 export interface DayPlan {
@@ -56,6 +58,14 @@ export interface Itinerary {
   itineraries: {
     "1day": ItineraryData;
     "3days": ItineraryData;
-    "7days": ItineraryData;
+    "5days": ItineraryData;
   };
+}
+
+/** A single place shown on the map when clicking an activity */
+export interface ActiveLocation {
+  lat: number;
+  lng: number;
+  title: string;
+  emoji?: string;
 }

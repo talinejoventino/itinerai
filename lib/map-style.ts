@@ -1,25 +1,25 @@
 import type { StyleSpecification } from "maplibre-gl";
 
-// ItinerAI custom dark map style
-// Uses OpenFreeMap vector tiles with design system palette
+// ItinerAI map style — DS palette, lighter tone
+// Core DS: deep-navy #0A1931 | ocean-mid #1A3D63 | sky-accent #4A7FA7 | mist #B3CFE5
 
 const DS = {
-  bg:         "#07111C",  // slightly deeper than deep-navy for ocean contrast
-  land:       "#0A1931",  // deep-navy — land areas
-  landAlt:    "#0C1E35",  // slight variation for parks / landcover
-  water:      "#040B14",  // very dark water
-  oceanMid:   "#1A3D63",  // roads, selected areas
+  bg:         "#2d516c",  // DS sky-accent — oceano
+  land:       "#5C8FA8",  // terra — azul médio-escuro
+  landAlt:    "#4F849E",  // variação levemente mais escura
+  water:      "#0A1931",  // very dark water
+  oceanMid:   "#1A3D63",
   skyAccent:  "#4A7FA7",
   mist:       "#B3CFE5",
-  border:     "rgba(179,207,229,0.18)",  // country borders
-  borderFaint:"rgba(179,207,229,0.07)",  // state borders
-  roadMajor:  "#152A42",
-  roadMinor:  "#0E1F30",
-  labelCountry: "rgba(179,207,229,0.75)",
-  labelCity:    "rgba(179,207,229,0.85)",
-  labelMuted:   "rgba(179,207,229,0.45)",
-  labelWater:   "rgba(74,127,167,0.55)",
-  halo:       "rgba(4,11,20,0.85)",
+  border:     "rgba(10,25,49,0.28)",   // deep-navy suave
+  borderFaint:"rgba(10,25,49,0.10)",
+  roadMajor:  "#7EAABF",
+  roadMinor:  "#8EB8CC",
+  labelCountry: "rgba(240,250,255,0.92)", // claro p/ leitura em fundo mais escuro
+  labelCity:    "rgba(240,250,255,0.95)",
+  labelMuted:   "rgba(200,228,245,0.75)",
+  labelWater:   "rgba(200,228,245,0.70)",
+  halo:       "rgba(45,81,108,0.45)",
 };
 
 const FONT = ["Noto Sans Regular"];
@@ -72,7 +72,7 @@ export const itineraiMapStyle: StyleSpecification = {
       source: "openmaptiles",
       "source-layer": "landcover",
       filter: ["in", "class", "grass", "scrub", "wood", "forest"],
-      paint: { "fill-color": "#091828", "fill-opacity": 0.8 },
+      paint: { "fill-color": "#3A6A88", "fill-opacity": 0.75 },
     },
     {
       id: "landcover-sand",
@@ -80,7 +80,7 @@ export const itineraiMapStyle: StyleSpecification = {
       source: "openmaptiles",
       "source-layer": "landcover",
       filter: ["in", "class", "sand", "rock", "ice"],
-      paint: { "fill-color": "#0C1E35", "fill-opacity": 0.6 },
+      paint: { "fill-color": "#e0dedc", "fill-opacity": 0.6 },
     },
     {
       id: "landuse-residential",
@@ -89,7 +89,7 @@ export const itineraiMapStyle: StyleSpecification = {
       "source-layer": "landuse",
       filter: ["in", "class", "residential", "suburb"],
       minzoom: 10,
-      paint: { "fill-color": "#0C1E35", "fill-opacity": 0.5 },
+      paint: { "fill-color": "#4F849E", "fill-opacity": 0.5 },
     },
     {
       id: "landuse-commercial",
@@ -98,7 +98,7 @@ export const itineraiMapStyle: StyleSpecification = {
       "source-layer": "landuse",
       filter: ["in", "class", "commercial", "industrial"],
       minzoom: 11,
-      paint: { "fill-color": "#0F2240", "fill-opacity": 0.6 },
+      paint: { "fill-color": "#487898", "fill-opacity": 0.6 },
     },
     {
       id: "landuse-park",
@@ -107,7 +107,7 @@ export const itineraiMapStyle: StyleSpecification = {
       "source-layer": "landuse",
       filter: ["in", "class", "park", "pitch", "recreation_ground", "village_green", "garden"],
       minzoom: 10,
-      paint: { "fill-color": "#081624", "fill-opacity": 0.8 },
+      paint: { "fill-color": "#3A6A88", "fill-opacity": 0.75 },
     },
 
     // ── National parks ───────────────────────────────────
@@ -116,7 +116,7 @@ export const itineraiMapStyle: StyleSpecification = {
       type: "fill",
       source: "openmaptiles",
       "source-layer": "park",
-      paint: { "fill-color": "#081624", "fill-opacity": 0.5 },
+      paint: { "fill-color": "#3A6A88", "fill-opacity": 0.5 },
     },
 
     // ── Boundaries ───────────────────────────────────────
@@ -140,7 +140,7 @@ export const itineraiMapStyle: StyleSpecification = {
       "source-layer": "boundary",
       filter: ["==", "admin_level", 2],
       paint: {
-        "line-color": "rgba(179,207,229,0.06)",
+        "line-color": "rgba(50,90,130,0.08)",
         "line-width": ["interpolate", ["linear"], ["zoom"], 2, 2, 8, 5],
         "line-blur": 2,
       },
@@ -167,7 +167,7 @@ export const itineraiMapStyle: StyleSpecification = {
       minzoom: 8,
       layout: { "line-cap": "round" },
       paint: {
-        "line-color": "#0A1931",
+        "line-color": "#5C8FA8",
         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 2, 14, 6],
       },
     },
@@ -231,9 +231,9 @@ export const itineraiMapStyle: StyleSpecification = {
       "source-layer": "building",
       minzoom: 14,
       paint: {
-        "fill-color": "#0F2240",
-        "fill-opacity": 0.8,
-        "fill-outline-color": "rgba(179,207,229,0.06)",
+        "fill-color": "#507A92",
+        "fill-opacity": 0.75,
+        "fill-outline-color": "rgba(10,25,49,0.12)",
       },
     },
 
@@ -320,7 +320,7 @@ export const itineraiMapStyle: StyleSpecification = {
         "text-offset": [0, -0.3],
       },
       paint: {
-        "text-color": "#B3CFE5",
+        "text-color": "#E8F4FF",
         "text-halo-color": DS.halo,
         "text-halo-width": 1.5,
       },
@@ -361,7 +361,7 @@ export const itineraiMapStyle: StyleSpecification = {
         "text-size": ["interpolate", ["linear"], ["zoom"], 9, 10, 14, 13],
       },
       paint: {
-        "text-color": "rgba(179,207,229,0.6)",
+        "text-color": "rgba(220,240,255,0.80)",
         "text-halo-color": DS.halo,
         "text-halo-width": 1,
       },
@@ -383,7 +383,7 @@ export const itineraiMapStyle: StyleSpecification = {
         "text-transform": "uppercase",
       },
       paint: {
-        "text-color": "rgba(179,207,229,0.4)",
+        "text-color": "rgba(200,228,245,0.65)",
         "text-halo-color": DS.halo,
         "text-halo-width": 1,
       },
@@ -405,7 +405,7 @@ export const itineraiMapStyle: StyleSpecification = {
         "text-max-angle": 30,
       },
       paint: {
-        "text-color": "rgba(74,127,167,0.5)",
+        "text-color": "rgba(200,228,245,0.70)",
         "text-halo-color": DS.halo,
         "text-halo-width": 1,
       },

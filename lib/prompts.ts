@@ -30,7 +30,9 @@ Return ONLY valid JSON, without any additional text, with this exact structure:
               "title": "Location name",
               "description": "Description of what to do and see at this location.",
               "tip": "Practical tip (price, hours, how to get there, reservation, etc.)",
-              "emoji": "🏛️"
+              "emoji": "🏛️",
+              "lat": 48.8584,
+              "lng": 2.2945
             }
           ]
         }
@@ -56,8 +58,8 @@ Return ONLY valid JSON, without any additional text, with this exact structure:
         }
       ]
     },
-    "7days": {
-      "title": "Complete ${city.name} Immersion: 7 Days",
+    "5days": {
+      "title": "Complete ${city.name} Immersion: 5 Days",
       "days": [
         {
           "day": 1,
@@ -72,10 +74,11 @@ Return ONLY valid JSON, without any additional text, with this exact structure:
 Important rules:
 - Each 1-day itinerary should have 5 to 6 activities
 - Each day in the 3-day itinerary should have 4 to 5 activities
-- Each day in the 7-day itinerary should have 3 to 4 activities
+- Each day in the 5-day itinerary should have 3 to 4 activities
 - Include relevant emojis for each activity
 - Times should be realistic and consider travel time
 - Tips should be practical and useful (approximate prices, transportation tips, etc.)
 - Use English language
+- For each activity, include the real GPS coordinates (lat/lng) of the named place — must be accurate real-world coordinates located in or near ${city.name}. These are used to plot the route on a map
 - Return ONLY the JSON, without markdown, without text before or after`;
 }

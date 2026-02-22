@@ -3,10 +3,11 @@
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Globe, Loader2, AlertCircle, X } from "lucide-react";
+import { Sparkles, Globe, Loader2, AlertCircle, X, Pin } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import ItineraryPanel from "@/components/ItineraryPanel";
-import type { City, Itinerary } from "@/types";
+import type { City, Itinerary, Activity, ActiveLocation } from "@/types";
+import { geocodePlace } from "@/lib/nominatim";
 
 const MapView = dynamic(() => import("@/components/MapView"), {
   ssr: false,
@@ -30,6 +31,7 @@ export default function HomePage() {
   const [state, setState] = useState<AppState>("idle");
   const [error, setError] = useState<string | null>(null);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [activeLocation, setActiveLocation] = useState<ActiveLocation | null>(null);
 
   const handleCitySelect = useCallback((city: City) => {
     setSelectedCity(city);
@@ -37,12 +39,14 @@ export default function HomePage() {
     setState("idle");
     setError(null);
     setPanelOpen(false);
+    setActiveLocation(null);
   }, []);
 
   const handleGenerate = async () => {
     if (!selectedCity) return;
     setState("loading");
     setError(null);
+    setActiveLocation(null);
 
     try {
       const res = await fetch("/api/itinerary", {
@@ -67,6 +71,28 @@ export default function HomePage() {
     }
   };
 
+  const handleShowLocation = useCallback(async (activity: Activity) => {
+    if (!selectedCity) return;
+
+    let lat = activity.lat;
+    let lng = activity.lng;
+
+    // If AI-provided coords are missing or implausibly far, geocode via Nominatim
+    const isNear = (a: number, b: number) => Math.abs(a - b) <= 1.5;
+    if (!lat || !lng || !isNear(lat, selectedCity.lat) || !isNear(lng, selectedCity.lng)) {
+      const result = await geocodePlace(activity.title, selectedCity.name, selectedCity.lat, selectedCity.lng);
+      if (result) {
+        lat = result.lat;
+        lng = result.lng;
+      } else {
+        lat = selectedCity.lat;
+        lng = selectedCity.lng;
+      }
+    }
+
+    setActiveLocation({ lat: lat!, lng: lng!, title: activity.title, emoji: activity.emoji });
+  }, [selectedCity]);
+
   return (
     <div className="relative w-screen h-screen overflow-hidden" style={{ background: "#0A1931" }}>
 
@@ -80,6 +106,7 @@ export default function HomePage() {
         <MapView
           selectedCity={selectedCity}
           onCityClick={handleCitySelect}
+          activeLocation={activeLocation}
         />
       </motion.div>
 
@@ -133,7 +160,6 @@ export default function HomePage() {
       {/* ── Bottom CTA area ── */}
       <AnimatePresence mode="wait">
         {selectedCity && !panelOpen ? (
-          // Phase 3: city selected — show generate CTA
           <motion.div
             key="cta"
             className="absolute bottom-8 left-1/2 z-[500]"
@@ -157,10 +183,10 @@ export default function HomePage() {
                   fontFamily: "var(--font-body, 'Outfit', sans-serif)",
                   fontSize: "13px",
                   fontWeight: 500,
-                  color: "#B3CFE5",
+                  color: "#fff",
                 }}
               >
-                <span>📍</span>
+                <Pin size={14} color="#fff" />
                 <span>{selectedCity.name}, {selectedCity.country}</span>
               </div>
 
@@ -224,7 +250,6 @@ export default function HomePage() {
             </div>
           </motion.div>
         ) : !selectedCity ? (
-          // No city selected — prompt to click a city label
           <motion.div
             key="hint"
             className="absolute bottom-8 left-1/2 z-[500] pointer-events-none"
@@ -270,6 +295,8 @@ export default function HomePage() {
               city={selectedCity}
               itinerary={itinerary}
               onClose={() => setPanelOpen(false)}
+              onShowLocation={handleShowLocation}
+              activeLocation={activeLocation}
             />
           </motion.div>
         )}
