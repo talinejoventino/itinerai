@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Globe, Loader2, AlertCircle, X, Pin } from "lucide-react";
+import { Sparkles, Globe, Loader2, AlertCircle, X, Pin, MapPlus } from "lucide-react";
 import SearchBar from "@/components/SearchBar";
 import ItineraryPanel from "@/components/ItineraryPanel";
 import type { City, Itinerary, Activity, ActiveLocation } from "@/types";
@@ -120,8 +120,10 @@ export default function HomePage() {
         <div className="flex items-center gap-3 p-4">
           {/* Logo */}
           <div
-            className="pointer-events-auto flex items-center gap-2.5 shrink-0 px-4 py-2.5"
+            className="pointer-events-auto shrink-0 overflow-hidden"
             style={{
+              width: "128px",
+              height: "56px",
               background: "rgba(246,250,253,0.08)",
               backdropFilter: "blur(20px)",
               WebkitBackdropFilter: "blur(20px)",
@@ -130,24 +132,12 @@ export default function HomePage() {
               boxShadow: "0 4px 20px rgba(10,25,49,0.18)",
             }}
           >
-            <div
-              className="w-7 h-7 flex items-center justify-center"
-              style={{
-                background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
-                borderRadius: "10px",
-              }}
-            >
-              <Globe className="w-4 h-4 text-white" />
-            </div>
-            <span
-              className="font-bold text-base tracking-tight"
-              style={{
-                fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
-                color: "#F6FAFD",
-              }}
-            >
-              Itiner<span style={{ color: "#4A7FA7" }}>AI</span>
-            </span>
+            <img
+              src="/ItinerAi.png"
+              alt="ItinerAI"
+              className="w-full h-full"
+              style={{ objectFit: "contain", transform: "scale(1.5)", transformOrigin: "center" }}
+            />
           </div>
 
           {/* Search bar */}
@@ -275,7 +265,7 @@ export default function HomePage() {
                 whiteSpace: "nowrap",
               }}
             >
-              🌍 Click on a city name on the map
+              <MapPlus /> Click on a city name on the map
             </div>
           </motion.div>
         ) : null}

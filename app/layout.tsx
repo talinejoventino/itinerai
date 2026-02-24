@@ -26,6 +26,9 @@ const outfit = Outfit({
 export const metadata: Metadata = {
   title: "ItinerAI — Travel Itineraries",
   description: "Explore the world and generate personalized travel itineraries",
+  icons: {
+    icon: "/ItinerAi.svg",
+  },
 };
 
 export default function RootLayout({

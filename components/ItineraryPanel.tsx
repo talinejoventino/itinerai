@@ -6,13 +6,15 @@ import {
   ChevronLeft,
   ChevronDown,
   Lightbulb,
-  Sparkles,
   CalendarDays,
   DollarSign,
   Compass,
   CloudSun,
   MapPin,
   ExternalLink,
+  Loader2,
+  Download,
+  Check,
   type LucideIcon,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -58,10 +60,26 @@ export default function ItineraryPanel({
 }: ItineraryPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [openDayIndex, setOpenDayIndex] = useState<number>(0);
+  type SaveState = "idle" | "generating" | "done";
+  const [saveState, setSaveState] = useState<SaveState>("idle");
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab);
     setOpenDayIndex(0);
+  };
+
+  const handleSavePDF = async () => {
+    if (saveState !== "idle") return;
+    setSaveState("generating");
+    try {
+      const { generateItineraryPDF } = await import("@/lib/pdf");
+      await generateItineraryPDF(city, itinerary);
+    } catch (err) {
+      console.error("PDF generation failed:", err);
+    } finally {
+      setSaveState("done");
+      setTimeout(() => setSaveState("idle"), 2000);
+    }
   };
 
   return (
@@ -197,28 +215,54 @@ export default function ItineraryPanel({
         }}
       >
         <button
+          onClick={handleSavePDF}
+          disabled={saveState !== "idle"}
           className="w-full flex items-center justify-center gap-2.5 font-semibold text-white transition-all duration-200"
           style={{
-            background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
+            background: saveState === "done"
+              ? "linear-gradient(135deg, #2E7D52 0%, #1B4D33 100%)"
+              : "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
             borderRadius: "14px",
             height: "52px",
             fontSize: "15px",
             fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
-            boxShadow: "0 4px 20px rgba(74,127,167,0.4)",
+            boxShadow: saveState === "done"
+              ? "0 4px 20px rgba(46,125,82,0.4)"
+              : "0 4px 20px rgba(74,127,167,0.4)",
             border: "none",
-            cursor: "pointer",
+            cursor: saveState !== "idle" ? "not-allowed" : "pointer",
+            opacity: saveState === "generating" ? 0.8 : 1,
           }}
           onMouseEnter={(e) => {
+            if (saveState !== "idle") return;
             (e.currentTarget as HTMLElement).style.transform = "scale(1.02)";
             (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 28px rgba(74,127,167,0.55)";
           }}
           onMouseLeave={(e) => {
             (e.currentTarget as HTMLElement).style.transform = "scale(1)";
-            (e.currentTarget as HTMLElement).style.boxShadow = "0 4px 20px rgba(74,127,167,0.4)";
+            (e.currentTarget as HTMLElement).style.boxShadow = saveState === "done"
+              ? "0 4px 20px rgba(46,125,82,0.4)"
+              : "0 4px 20px rgba(74,127,167,0.4)";
           }}
         >
-          <Sparkles className="h-4 w-4" />
-          Save Itinerary
+          {saveState === "generating" && (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Generating PDF...
+            </>
+          )}
+          {saveState === "done" && (
+            <>
+              <Check className="h-4 w-4" />
+              Downloaded!
+            </>
+          )}
+          {saveState === "idle" && (
+            <>
+              <Download className="h-4 w-4" />
+              Save Itinerary
+            </>
+          )}
         </button>
       </div>
     </div>
