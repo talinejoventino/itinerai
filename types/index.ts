@@ -51,10 +51,44 @@ export interface ItineraryData {
   days: DayPlan[];
 }
 
+export interface EstimatedBudgetPerPerson {
+  budget: string;
+  midRange: string;
+  luxury: string;
+  notes: string;
+}
+
+export interface BestSeason {
+  recommended: string;
+  toAvoid: string;
+  notes: string;
+}
+
+export interface RecommendedDuration {
+  minimum: number;
+  ideal: number;
+  maximum: number;
+  notes: string;
+}
+
+export interface NearbyExcursion {
+  destination: string;
+  country: string;
+  distance: string;
+  travelTime: string;
+  why: string;
+  bestFor: string;
+}
+
 export interface Itinerary {
   city: string;
   country: string;
   highlights: string[];
+  estimatedBudgetPerPerson?: EstimatedBudgetPerPerson;
+  style?: string[];
+  bestSeason?: BestSeason;
+  recommendedDuration?: RecommendedDuration;
+  nearbyExcursions?: NearbyExcursion[];
   itineraries: {
     "1day": ItineraryData;
     "3days": ItineraryData;

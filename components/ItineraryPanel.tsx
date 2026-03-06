@@ -15,6 +15,7 @@ import {
   Loader2,
   Download,
   Check,
+  Globe,
   type LucideIcon,
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -36,12 +37,39 @@ interface SummaryCard {
   sub: string;
 }
 
-const SUMMARY_CARDS: SummaryCard[] = [
-  { icon: CalendarDays, label: "Duration",     value: "—", sub: "TBD" },
-  { icon: DollarSign,   label: "Est. Budget",  value: "—", sub: "Per person" },
-  { icon: Compass,      label: "Style",        value: "—", sub: "TBD" },
-  { icon: CloudSun,     label: "Best Season",  value: "—", sub: "TBD" },
-];
+function buildSummaryCards(itinerary: Itinerary): SummaryCard[] {
+  const { estimatedBudgetPerPerson, style, bestSeason, recommendedDuration } = itinerary;
+  return [
+    {
+      icon: CalendarDays,
+      label: "Duration",
+      value: recommendedDuration ? `${recommendedDuration.ideal} days` : "1–5 days",
+      sub: recommendedDuration
+        ? `${recommendedDuration.minimum}–${recommendedDuration.maximum} day range`
+        : "Choose your duration",
+    },
+    {
+      icon: DollarSign,
+      label: "Est. Budget",
+      value: estimatedBudgetPerPerson?.midRange ?? "—",
+      sub: estimatedBudgetPerPerson
+        ? `Budget: ${estimatedBudgetPerPerson.budget}`
+        : "Per person",
+    },
+    {
+      icon: Compass,
+      label: "Style",
+      value: style?.[0] ?? "—",
+      sub: style?.slice(1, 3).join(" · ") ?? "—",
+    },
+    {
+      icon: CloudSun,
+      label: "Best Season",
+      value: bestSeason?.recommended.split(" and ")[0] ?? "—",
+      sub: bestSeason ? `Avoid: ${bestSeason.toAvoid}` : "—",
+    },
+  ];
+}
 
 interface ItineraryPanelProps {
   city: City;
@@ -271,11 +299,14 @@ export default function ItineraryPanel({
 
 /* ── Info Tab ── */
 function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
+  const cards = buildSummaryCards(itinerary);
+  const { estimatedBudgetPerPerson, style, bestSeason, recommendedDuration, nearbyExcursions } = itinerary;
+
   return (
     <div className="px-5 pt-5 pb-6 space-y-5">
       {/* Summary cards 2×2 */}
       <div className="grid grid-cols-2 gap-2.5">
-        {SUMMARY_CARDS.map((card) => {
+        {cards.map((card) => {
           const Icon = card.icon;
           return (
             <div
@@ -307,17 +338,17 @@ function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
                 {card.label}
               </span>
               <span
-                className="block font-bold"
+                className="block font-bold truncate"
                 style={{
                   fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
-                  fontSize: "17px",
+                  fontSize: "15px",
                   color: "#F6FAFD",
                 }}
               >
                 {card.value}
               </span>
               <span
-                className="block mt-0.5"
+                className="block mt-0.5 truncate"
                 style={{
                   fontFamily: "var(--font-body, 'Outfit', sans-serif)",
                   fontSize: "11px",
@@ -372,35 +403,227 @@ function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
         cultural experiences and local cuisine — at a comfortable travel pace.
       </p>
 
-      {/* Itinerary tags */}
-      <div>
-        <span
+      {/* Style tags */}
+      {style && style.length > 0 && (
+        <div>
+          <SectionLabel>Style</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {style.map((tag, i) => (
+              <span
+                key={i}
+                className="px-3 py-1.5"
+                style={{
+                  background: "rgba(74,127,167,0.15)",
+                  border: "1px solid rgba(74,127,167,0.3)",
+                  borderRadius: "999px",
+                  fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "#4A7FA7",
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Best Season */}
+      {bestSeason && (
+        <div
+          className="rounded-2xl p-4 space-y-3"
           style={{
-            fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
-            fontSize: "11px",
-            fontWeight: 600,
-            textTransform: "uppercase",
-            letterSpacing: "1px",
-            color: "rgba(179,207,229,0.45)",
-            display: "block",
-            marginBottom: "10px",
+            background: "rgba(26,61,99,0.4)",
+            border: "1px solid rgba(179,207,229,0.1)",
           }}
         >
-          Itinerary Tags
-        </span>
+          <div className="flex items-center gap-2">
+            <CloudSun style={{ width: "14px", height: "14px", color: "#4A7FA7" }} />
+            <span
+              style={{
+                fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#F6FAFD",
+              }}
+            >
+              Best Season
+            </span>
+          </div>
+          <div className="space-y-2">
+            <div>
+              <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.7px", color: "rgba(179,207,229,0.45)" }}>
+                Recommended
+              </span>
+              <p style={{ fontFamily: "var(--font-body, 'Outfit', sans-serif)", fontSize: "13px", color: "#F6FAFD", marginTop: "2px" }}>
+                {bestSeason.recommended}
+              </p>
+            </div>
+            <div>
+              <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.7px", color: "rgba(179,207,229,0.45)" }}>
+                Avoid
+              </span>
+              <p style={{ fontFamily: "var(--font-body, 'Outfit', sans-serif)", fontSize: "13px", color: "#F6FAFD", marginTop: "2px" }}>
+                {bestSeason.toAvoid}
+              </p>
+            </div>
+            {bestSeason.notes && (
+              <p style={{ fontFamily: "var(--font-body, 'Outfit', sans-serif)", fontSize: "12px", color: "rgba(179,207,229,0.55)", fontStyle: "italic", lineHeight: 1.5 }}>
+                {bestSeason.notes}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Budget breakdown */}
+      {estimatedBudgetPerPerson && (
+        <div
+          className="rounded-2xl p-4 space-y-3"
+          style={{
+            background: "rgba(26,61,99,0.4)",
+            border: "1px solid rgba(179,207,229,0.1)",
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <DollarSign style={{ width: "14px", height: "14px", color: "#4A7FA7" }} />
+            <span
+              style={{
+                fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "#F6FAFD",
+              }}
+            >
+              Est. Budget Per Person / Day
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {(
+              [
+                { label: "Budget", value: estimatedBudgetPerPerson.budget },
+                { label: "Mid-range", value: estimatedBudgetPerPerson.midRange },
+                { label: "Luxury", value: estimatedBudgetPerPerson.luxury },
+              ] as const
+            ).map(({ label, value }) => (
+              <div
+                key={label}
+                className="rounded-xl p-2.5 text-center"
+                style={{ background: "rgba(74,127,167,0.1)", border: "1px solid rgba(74,127,167,0.2)" }}
+              >
+                <span style={{ fontSize: "10px", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.6px", color: "rgba(179,207,229,0.45)", display: "block" }}>
+                  {label}
+                </span>
+                <span style={{ fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)", fontSize: "13px", fontWeight: 700, color: "#F6FAFD", display: "block", marginTop: "2px" }}>
+                  {value}
+                </span>
+              </div>
+            ))}
+          </div>
+          {estimatedBudgetPerPerson.notes && (
+            <p style={{ fontFamily: "var(--font-body, 'Outfit', sans-serif)", fontSize: "12px", color: "rgba(179,207,229,0.55)", fontStyle: "italic", lineHeight: 1.5 }}>
+              {estimatedBudgetPerPerson.notes}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Duration notes */}
+      {recommendedDuration?.notes && (
+        <div
+          className="rounded-xl px-4 py-3"
+          style={{ background: "rgba(74,127,167,0.08)", border: "1px solid rgba(74,127,167,0.18)" }}
+        >
+          <div className="flex items-start gap-2">
+            <CalendarDays style={{ width: "13px", height: "13px", color: "#4A7FA7", marginTop: "2px", flexShrink: 0 }} />
+            <p style={{ fontFamily: "var(--font-body, 'Outfit', sans-serif)", fontSize: "12px", color: "rgba(179,207,229,0.65)", lineHeight: 1.5 }}>
+              {recommendedDuration.notes}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Nearby Excursions */}
+      {nearbyExcursions && nearbyExcursions.length > 0 && (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Globe style={{ width: "13px", height: "13px", color: "rgba(179,207,229,0.45)" }} />
+            <span  >Nearby Excursions</span>
+          </div>
+          <div className="space-y-2">
+            {nearbyExcursions.map((exc, i) => (
+              <div
+                key={i}
+                className="rounded-xl p-3.5"
+                style={{
+                  background: "rgba(26,61,99,0.4)",
+                  border: "1px solid rgba(179,207,229,0.1)",
+                }}
+              >
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <span
+                    style={{
+                      fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      color: "#F6FAFD",
+                    }}
+                  >
+                    {exc.destination}
+                    {exc.country && (
+                      <span style={{ fontWeight: 400, color: "rgba(179,207,229,0.45)", marginLeft: "5px", fontSize: "12px" }}>
+                        {exc.country}
+                      </span>
+                    )}
+                  </span>
+                  <span
+                    className="shrink-0"
+                    style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      color: "#4A7FA7",
+                      background: "rgba(74,127,167,0.15)",
+                      border: "1px solid rgba(74,127,167,0.25)",
+                      borderRadius: "999px",
+                      padding: "2px 8px",
+                      whiteSpace: "nowrap" as const,
+                    }}
+                  >
+                    {exc.bestFor}
+                  </span>
+                </div>
+                <p style={{ fontFamily: "var(--font-body, 'Outfit', sans-serif)", fontSize: "12px", color: "rgba(179,207,229,0.6)", lineHeight: 1.5 }}>
+                  {exc.why}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <MapPin style={{ width: "10px", height: "10px", color: "rgba(179,207,229,0.35)", flexShrink: 0 }} />
+                  <span style={{ fontSize: "11px", color: "rgba(179,207,229,0.4)" }}>{exc.distance}</span>
+                  <span style={{ fontSize: "11px", color: "rgba(179,207,229,0.25)" }}>·</span>
+                  <span style={{ fontSize: "11px", color: "rgba(179,207,229,0.4)" }}>{exc.travelTime}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Highlights */}
+      <div>
+        <SectionLabel>Highlights</SectionLabel>
         <div className="flex flex-wrap gap-2">
           {itinerary.highlights.map((tag, i) => (
             <span
               key={i}
               className="px-3 py-1.5"
               style={{
-                background: "rgba(74,127,167,0.15)",
-                border: "1px solid rgba(74,127,167,0.3)",
+                background: "rgba(26,61,99,0.6)",
+                border: "1px solid rgba(179,207,229,0.12)",
                 borderRadius: "999px",
                 fontFamily: "var(--font-body, 'Outfit', sans-serif)",
                 fontSize: "12px",
                 fontWeight: 500,
-                color: "#4A7FA7",
+                color: "rgba(179,207,229,0.7)",
               }}
             >
               {tag}
@@ -409,6 +632,25 @@ function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
         </div>
       </div>
     </div>
+  );
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span
+      style={{
+        fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+        fontSize: "11px",
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "1px",
+        color: "rgba(179,207,229,0.45)",
+        display: "block",
+        marginBottom: "10px",
+      }}
+    >
+      {children}
+    </span>
   );
 }
 

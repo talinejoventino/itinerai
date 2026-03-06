@@ -10,6 +10,7 @@ export async function searchCities(query: string): Promise<City[]> {
     format: "json",
     limit: "6",
     featuretype: "city",
+    addressdetails: "1",
     "accept-language": "en",
   });
 
