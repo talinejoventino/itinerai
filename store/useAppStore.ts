@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { City, PartialItinerary, ActiveLocation } from "@/types";
 
 export type AppState = "idle" | "loading" | "streaming" | "done" | "error";
@@ -19,27 +20,40 @@ interface AppStore {
   setActiveLocation: (location: ActiveLocation | null) => void;
 }
 
-export const useAppStore = create<AppStore>((set) => ({
-  selectedCity: null,
-  itinerary: null,
-  appState: "idle",
-  error: null,
-  panelOpen: false,
-  activeLocation: null,
-
-  selectCity: (city) =>
-    set({
-      selectedCity: city,
+export const useAppStore = create<AppStore>()(
+  persist(
+    (set) => ({
+      selectedCity: null,
       itinerary: null,
       appState: "idle",
       error: null,
       panelOpen: false,
       activeLocation: null,
-    }),
 
-  setItinerary: (itinerary) => set({ itinerary }),
-  setAppState: (appState) => set({ appState }),
-  setError: (error) => set({ error }),
-  setPanelOpen: (panelOpen) => set({ panelOpen }),
-  setActiveLocation: (activeLocation) => set({ activeLocation }),
-}));
+      selectCity: (city) =>
+        set({
+          selectedCity: city,
+          itinerary: null,
+          appState: "idle",
+          error: null,
+          panelOpen: false,
+          activeLocation: null,
+        }),
+
+      setItinerary: (itinerary) => set({ itinerary }),
+      setAppState: (appState) => set({ appState }),
+      setError: (error) => set({ error }),
+      setPanelOpen: (panelOpen) => set({ panelOpen }),
+      setActiveLocation: (activeLocation) => set({ activeLocation }),
+    }),
+    {
+      name: "itinerai-storage",
+      partialize: (state) => ({
+        selectedCity: state.selectedCity,
+        itinerary: state.itinerary,
+        panelOpen: state.panelOpen,
+        appState: state.appState === "done" ? "done" : "idle",
+      }),
+    }
+  )
+);
