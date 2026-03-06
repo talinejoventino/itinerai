@@ -1,14 +1,42 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { buildItineraryPrompt } from "@/lib/prompts";
+import { buildOverviewPrompt, buildItineraryDaysPrompt } from "@/lib/prompts";
 import { birminghamMockData } from "@/lib/mock-data";
-import type { City, Itinerary } from "@/types";
+import type { City, Itinerary, ItineraryData } from "@/types";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const USE_MOCK_DATA = process.env.USE_MOCK_DATA === "true";
+
+type OverviewResponse = Omit<Itinerary, "itineraries">;
+
+async function callAI<T>(prompt: string, maxTokens: number): Promise<T> {
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4.1-nano",
+    max_tokens: maxTokens,
+    response_format: { type: "json_object" },
+    messages: [{ role: "user", content: prompt }],
+  });
+
+  const choice = completion.choices[0];
+
+  if (choice.finish_reason === "length") {
+    throw new Error("AI response was truncated. Please try again.");
+  }
+
+  const text = choice.message.content?.trim() ?? "";
+  if (!text) throw new Error("AI returned empty response");
+
+  return JSON.parse(text) as T;
+}
+
+const encoder = new TextEncoder();
+
+function emitLine(controller: ReadableStreamDefaultController, type: string, data: object) {
+  controller.enqueue(encoder.encode(JSON.stringify({ type, ...data }) + "\n"));
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,41 +52,68 @@ export async function POST(req: NextRequest) {
     if (USE_MOCK_DATA) {
       console.log("[MOCK MODE]:", city.name);
 
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const stream = new ReadableStream({
+        async start(controller) {
+          const mock: Itinerary = {
+            ...birminghamMockData,
+            city: city.name,
+            country: city.country,
+          };
+          const { itineraries, ...overview } = mock;
 
-      const mockItinerary: Itinerary = {
-        ...birminghamMockData,
-        city: city.name,
-        country: city.country,
-      };
+          await new Promise((r) => setTimeout(r, 800));
+          emitLine(controller, "overview", overview);
 
-      return NextResponse.json(mockItinerary);
+          await new Promise((r) => setTimeout(r, 400));
+          emitLine(controller, "1day", itineraries["1day"]);
+
+          await new Promise((r) => setTimeout(r, 400));
+          emitLine(controller, "3days", itineraries["3days"]);
+
+          await new Promise((r) => setTimeout(r, 400));
+          emitLine(controller, "5days", itineraries["5days"]);
+
+          controller.close();
+        },
+      });
+
+      return new Response(stream, {
+        headers: { "Content-Type": "application/x-ndjson" },
+      });
     }
 
-    const prompt = buildItineraryPrompt(city);
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          const overviewPromise = callAI<OverviewResponse>(buildOverviewPrompt(city), 1024).then(
+            (data) => emitLine(controller, "overview", { ...data, city: city.name, country: city.country })
+          );
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      max_tokens: 4096,
-      messages: [
-        {
-          role: "user",
-          content: prompt,
-        },
-      ],
+          const day1Promise = callAI<ItineraryData>(buildItineraryDaysPrompt(city, 1), 1536).then(
+            (data) => emitLine(controller, "1day", data)
+          );
+
+          const day3Promise = callAI<ItineraryData>(buildItineraryDaysPrompt(city, 3), 2560).then(
+            (data) => emitLine(controller, "3days", data)
+          );
+
+          const day5Promise = callAI<ItineraryData>(buildItineraryDaysPrompt(city, 5), 4096).then(
+            (data) => emitLine(controller, "5days", data)
+          );
+
+          await Promise.all([overviewPromise, day1Promise, day3Promise, day5Promise]);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Internal server error";
+          emitLine(controller, "error", { message });
+        } finally {
+          controller.close();
+        }
+      },
     });
 
-    const text = completion.choices[0].message.content?.trim() ?? "";
-
-    // Extract JSON even if it comes with extra text
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      throw new Error("AI did not return valid JSON");
-    }
-
-    const itinerary: Itinerary = JSON.parse(jsonMatch[0]);
-
-    return NextResponse.json(itinerary);
+    return new Response(stream, {
+      headers: { "Content-Type": "application/x-ndjson" },
+    });
   } catch (error) {
     console.error("[/api/itinerary] Erro:", error);
 

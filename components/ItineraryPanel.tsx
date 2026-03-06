@@ -18,8 +18,7 @@ import {
   Globe,
   type LucideIcon,
 } from "lucide-react";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import type { City, Itinerary, DayPlan, Activity, ActiveLocation } from "@/types";
+import type { City, PartialItinerary, ItineraryData, DayPlan, Activity, ActiveLocation, NearbyExcursion } from "@/types";
 
 type Tab = "info" | "1day" | "3days" | "5days";
 
@@ -37,7 +36,7 @@ interface SummaryCard {
   sub: string;
 }
 
-function buildSummaryCards(itinerary: Itinerary): SummaryCard[] {
+function buildSummaryCards(itinerary: PartialItinerary): SummaryCard[] {
   const { estimatedBudgetPerPerson, style, bestSeason, recommendedDuration } = itinerary;
   return [
     {
@@ -73,7 +72,8 @@ function buildSummaryCards(itinerary: Itinerary): SummaryCard[] {
 
 interface ItineraryPanelProps {
   city: City;
-  itinerary: Itinerary;
+  itinerary: PartialItinerary;
+  isComplete: boolean;
   onClose: () => void;
   onShowLocation: (activity: Activity) => void;
   activeLocation: ActiveLocation | null;
@@ -82,6 +82,7 @@ interface ItineraryPanelProps {
 export default function ItineraryPanel({
   city,
   itinerary,
+  isComplete,
   onClose,
   onShowLocation,
   activeLocation,
@@ -97,11 +98,12 @@ export default function ItineraryPanel({
   };
 
   const handleSavePDF = async () => {
-    if (saveState !== "idle") return;
+    if (saveState !== "idle" || !isComplete) return;
     setSaveState("generating");
     try {
       const { generateItineraryPDF } = await import("@/lib/pdf");
-      await generateItineraryPDF(city, itinerary);
+      // All tabs are guaranteed present when isComplete is true
+      await generateItineraryPDF(city, itinerary as Parameters<typeof generateItineraryPDF>[1]);
     } catch (err) {
       console.error("PDF generation failed:", err);
     } finally {
@@ -112,7 +114,7 @@ export default function ItineraryPanel({
 
   return (
     <div
-      className="h-full flex flex-col"
+      className="h-full flex flex-col overflow-x-hidden"
       style={{
         background: "rgba(7,17,40,0.98)",
         backdropFilter: "blur(48px)",
@@ -167,6 +169,25 @@ export default function ItineraryPanel({
               {city.country}
             </p>
           </div>
+
+          {/* Streaming indicator */}
+          {!isComplete && (
+            <div className="flex items-center gap-1.5 shrink-0">
+              <Loader2
+                className="animate-spin"
+                style={{ width: "13px", height: "13px", color: "#4A7FA7" }}
+              />
+              <span
+                style={{
+                  fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                  fontSize: "11px",
+                  color: "rgba(179,207,229,0.5)",
+                }}
+              >
+                Loading...
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -177,11 +198,14 @@ export default function ItineraryPanel({
       >
         {TABS.map((tab) => {
           const isActive = activeTab === tab.value;
+          const isTabLoading =
+            tab.value !== "info" && !itinerary.itineraries[tab.value] && !isComplete;
+
           return (
             <button
               key={tab.value}
               onClick={() => handleTabChange(tab.value)}
-              className="relative py-3 px-3 transition-colors duration-200 whitespace-nowrap"
+              className="relative py-3 px-3 transition-colors duration-200 whitespace-nowrap flex items-center gap-1.5"
               style={{
                 background: "none",
                 border: "none",
@@ -193,6 +217,12 @@ export default function ItineraryPanel({
               }}
             >
               {tab.label}
+              {isTabLoading && (
+                <Loader2
+                  className="animate-spin"
+                  style={{ width: "10px", height: "10px", color: "rgba(179,207,229,0.35)" }}
+                />
+              )}
               {isActive && (
                 <span
                   className="absolute bottom-0 left-0 right-0"
@@ -209,7 +239,7 @@ export default function ItineraryPanel({
       </div>
 
       {/* ── Tab content ── */}
-      <ScrollArea className="flex-1 min-h-0">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
@@ -232,7 +262,7 @@ export default function ItineraryPanel({
             )}
           </motion.div>
         </AnimatePresence>
-      </ScrollArea>
+      </div>
 
       {/* ── Footer CTA ── */}
       <div
@@ -244,7 +274,7 @@ export default function ItineraryPanel({
       >
         <button
           onClick={handleSavePDF}
-          disabled={saveState !== "idle"}
+          disabled={saveState !== "idle" || !isComplete}
           className="w-full flex items-center justify-center gap-2.5 font-semibold text-white transition-all duration-200"
           style={{
             background: saveState === "done"
@@ -258,11 +288,11 @@ export default function ItineraryPanel({
               ? "0 4px 20px rgba(46,125,82,0.4)"
               : "0 4px 20px rgba(74,127,167,0.4)",
             border: "none",
-            cursor: saveState !== "idle" ? "not-allowed" : "pointer",
-            opacity: saveState === "generating" ? 0.8 : 1,
+            cursor: (saveState !== "idle" || !isComplete) ? "not-allowed" : "pointer",
+            opacity: (saveState === "generating" || !isComplete) ? 0.6 : 1,
           }}
           onMouseEnter={(e) => {
-            if (saveState !== "idle") return;
+            if (saveState !== "idle" || !isComplete) return;
             (e.currentTarget as HTMLElement).style.transform = "scale(1.02)";
             (e.currentTarget as HTMLElement).style.boxShadow = "0 6px 28px rgba(74,127,167,0.55)";
           }}
@@ -285,7 +315,13 @@ export default function ItineraryPanel({
               Downloaded!
             </>
           )}
-          {saveState === "idle" && (
+          {saveState === "idle" && !isComplete && (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading itineraries...
+            </>
+          )}
+          {saveState === "idle" && isComplete && (
             <>
               <Download className="h-4 w-4" />
               Save Itinerary
@@ -298,7 +334,7 @@ export default function ItineraryPanel({
 }
 
 /* ── Info Tab ── */
-function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
+function InfoTab({ itinerary, city }: { itinerary: PartialItinerary; city: City }) {
   const cards = buildSummaryCards(itinerary);
   const { estimatedBudgetPerPerson, style, bestSeason, recommendedDuration, nearbyExcursions } = itinerary;
 
@@ -408,7 +444,7 @@ function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
         <div>
           <SectionLabel>Style</SectionLabel>
           <div className="flex flex-wrap gap-2">
-            {style.map((tag, i) => (
+            {style.map((tag: string, i: number) => (
               <span
                 key={i}
                 className="px-3 py-1.5"
@@ -549,10 +585,10 @@ function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Globe style={{ width: "13px", height: "13px", color: "rgba(179,207,229,0.45)" }} />
-            <span  >Nearby Excursions</span>
+            <span>Nearby Excursions</span>
           </div>
           <div className="space-y-2">
-            {nearbyExcursions.map((exc, i) => (
+            {nearbyExcursions.map((exc: NearbyExcursion, i: number) => (
               <div
                 key={i}
                 className="rounded-xl p-3.5"
@@ -609,28 +645,30 @@ function InfoTab({ itinerary, city }: { itinerary: Itinerary; city: City }) {
       )}
 
       {/* Highlights */}
-      <div>
-        <SectionLabel>Highlights</SectionLabel>
-        <div className="flex flex-wrap gap-2">
-          {itinerary.highlights.map((tag, i) => (
-            <span
-              key={i}
-              className="px-3 py-1.5"
-              style={{
-                background: "rgba(26,61,99,0.6)",
-                border: "1px solid rgba(179,207,229,0.12)",
-                borderRadius: "999px",
-                fontFamily: "var(--font-body, 'Outfit', sans-serif)",
-                fontSize: "12px",
-                fontWeight: 500,
-                color: "rgba(179,207,229,0.7)",
-              }}
-            >
-              {tag}
-            </span>
-          ))}
+      {itinerary.highlights.length > 0 && (
+        <div>
+          <SectionLabel>Highlights</SectionLabel>
+          <div className="flex flex-wrap gap-2">
+            {itinerary.highlights.map((tag: string, i: number) => (
+              <span
+                key={i}
+                className="px-3 py-1.5"
+                style={{
+                  background: "rgba(26,61,99,0.6)",
+                  border: "1px solid rgba(179,207,229,0.12)",
+                  borderRadius: "999px",
+                  fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: "rgba(179,207,229,0.7)",
+                }}
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -654,6 +692,26 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   );
 }
 
+/* ── Tab Skeleton ── */
+function TabSkeleton() {
+  return (
+    <div className="px-5 pt-4 pb-6 space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className="rounded-2xl animate-pulse"
+          style={{
+            height: "80px",
+            background: "rgba(26,61,99,0.4)",
+            border: "1px solid rgba(179,207,229,0.08)",
+            borderLeft: "3px solid rgba(74,127,167,0.3)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 /* ── Itinerary Tab (day cards) ── */
 function ItineraryTab({
   data,
@@ -663,15 +721,17 @@ function ItineraryTab({
   onShowLocation,
   activeLocation,
 }: {
-  data: Itinerary["itineraries"]["1day"];
+  data: ItineraryData | undefined;
   openDayIndex: number;
   setOpenDayIndex: (i: number) => void;
   city: City;
   onShowLocation: (activity: Activity) => void;
   activeLocation: ActiveLocation | null;
 }) {
+  if (!data) return <TabSkeleton />;
+
   return (
-    <div className="px-5 pt-4 pb-6 space-y-3">
+    <div className="px-5 pt-4 pb-6 space-y-3 w-full overflow-x-hidden">
       <p
         style={{
           fontFamily: "var(--font-body, 'Outfit', sans-serif)",
@@ -683,7 +743,7 @@ function ItineraryTab({
         {data.title}
       </p>
 
-      {data.days.map((day, idx) => (
+      {data.days.map((day: DayPlan, idx: number) => (
         <DayCard
           key={day.day}
           day={day}
@@ -725,6 +785,8 @@ function DayCard({
         borderLeft: "3px solid #4A7FA7",
         borderRadius: "16px",
         overflow: "hidden",
+        minWidth: 0,
+        width: "100%",
         transition: "border-left-color 0.2s",
       }}
       onMouseEnter={(e) => {
@@ -809,7 +871,7 @@ function DayCard({
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            style={{ overflow: "hidden" }}
+            style={{ overflow: "hidden", width: "100%" }}
           >
             <div className="px-4 py-3">
               {day.activities.map((activity, i) => (
@@ -920,7 +982,7 @@ function ActivityItem({
         )}
 
         {/* ── Action buttons ── */}
-        <div className="flex items-center gap-2 mt-2.5">
+        <div className="flex items-center flex-wrap gap-2 mt-2.5">
           {/* Ver no mapa */}
           <motion.button
             onClick={() => onShowLocation(activity)}

@@ -96,6 +96,23 @@ export interface Itinerary {
   };
 }
 
+/** Itinerary being built progressively via streaming */
+export interface PartialItinerary {
+  city: string;
+  country: string;
+  highlights: string[];
+  estimatedBudgetPerPerson?: EstimatedBudgetPerPerson;
+  style?: string[];
+  bestSeason?: BestSeason;
+  recommendedDuration?: RecommendedDuration;
+  nearbyExcursions?: NearbyExcursion[];
+  itineraries: {
+    "1day"?: ItineraryData;
+    "3days"?: ItineraryData;
+    "5days"?: ItineraryData;
+  };
+}
+
 /** A single place shown on the map when clicking an activity */
 export interface ActiveLocation {
   lat: number;
