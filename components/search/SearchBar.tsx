@@ -56,7 +56,6 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
     setResults([]);
   };
 
-  // Close dropdown on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -70,7 +69,6 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {/* Input wrapper */}
       <div
         className="relative flex items-center transition-all duration-200"
         style={{
@@ -78,16 +76,13 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
           background: "rgba(246,250,253,0.1)",
           backdropFilter: "blur(20px)",
           WebkitBackdropFilter: "blur(20px)",
-          border: focused
-            ? "1.5px solid #4A7FA7"
-            : "1.5px solid rgba(179,207,229,0.2)",
+          border: focused ? "1.5px solid #4A7FA7" : "1.5px solid rgba(179,207,229,0.2)",
           borderRadius: open && results.length > 0 ? "28px 28px 0 0" : "999px",
           boxShadow: focused
             ? "0 0 24px rgba(74,127,167,0.25), 0 4px 20px rgba(10,25,49,0.18)"
             : "0 4px 20px rgba(10,25,49,0.18)",
         }}
       >
-        {/* Search icon */}
         <div className="absolute left-5 flex items-center pointer-events-none">
           <Search
             className="h-4 w-4 transition-colors duration-200"
@@ -118,7 +113,6 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
           spellCheck={false}
         />
 
-        {/* Loader */}
         {loading && (
           <div className="absolute right-5">
             <Loader2 className="h-4 w-4 animate-spin" style={{ color: "#4A7FA7" }} />
@@ -126,7 +120,6 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
         )}
       </div>
 
-      {/* Dropdown results */}
       {open && results.length > 0 && (
         <div
           className="absolute top-full left-0 right-0 overflow-hidden z-[1000]"
