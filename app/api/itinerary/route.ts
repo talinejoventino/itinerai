@@ -14,7 +14,7 @@ type OverviewResponse = Omit<Itinerary, "itineraries">;
 
 async function callAI<T>(prompt: string, maxTokens: number): Promise<T> {
   const completion = await openai.chat.completions.create({
-    model: "gpt-4.1-nano",
+    model: "gpt-4.1-mini",
     max_tokens: maxTokens,
     response_format: { type: "json_object" },
     messages: [{ role: "user", content: prompt }],

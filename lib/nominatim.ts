@@ -39,28 +39,64 @@ export async function geocodePlace(
   cityLat: number,
   cityLng: number
 ): Promise<{ lat: number; lng: number } | null> {
-  const params = new URLSearchParams({
-    q: `${title}, ${cityName}`,
-    format: "json",
-    limit: "1",
-    "accept-language": "en",
-  });
+  const delta = 0.4;
+  // Commas must NOT be URL-encoded for bbox — build URL manually
+  const bboxStr = `${cityLng - delta},${cityLat - delta},${cityLng + delta},${cityLat + delta}`;
+  const proximityStr = `${cityLng},${cityLat}`;
 
-  const res = await fetch(`${NOMINATIM_BASE}/search?${params}`, {
+  const mapboxToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
+
+  if (mapboxToken) {
+    // Include poi, neighborhood, locality, address — but NOT "place" (returns the city itself when nothing found)
+    const query = encodeURIComponent(`${title}, ${cityName}`);
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${query}.json`
+      + `?proximity=${proximityStr}&bbox=${bboxStr}&limit=1&types=poi,neighborhood,locality,address&access_token=${mapboxToken}`;
+
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data.features?.length) {
+        const feature = data.features[0];
+        const placeType: string = feature.place_type?.[0] ?? "";
+
+        // Reject city/region-level fallbacks
+        const isCityLevel = ["place", "region", "country", "district"].includes(placeType);
+        if (!isCityLevel) {
+          // Verify the result text actually relates to the title query.
+          // Mapbox sometimes matches a neighborhood/locality named after the city
+          // (e.g. querying "Instituto Ricardo Brennand, Recife" returns neighborhood "Recife").
+          // Check that feature.text shares at least one meaningful word with the title
+          // (ignoring words that are just the city name).
+          const featureText = (feature.text ?? "").toLowerCase();
+          const cityWords = cityName.toLowerCase().split(/[\s,]+/);
+          const titleWords = title.toLowerCase().split(/[\s,]+/).filter(w => w.length > 2);
+          const nonCityTitleWords = titleWords.filter(w => !cityWords.includes(w));
+          const isRelevant = nonCityTitleWords.length === 0 ||
+            nonCityTitleWords.some(w => featureText.includes(w));
+
+          if (isRelevant) {
+            const [lng, lat] = feature.geometry.coordinates as [number, number];
+            return { lat, lng };
+          }
+        }
+      }
+    }
+  }
+
+  // Fallback: Photon (OSM) — good for landmarks and neighborhoods
+  const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(title)}`
+    + `&lat=${cityLat}&lon=${cityLng}&limit=1&lang=en&bbox=${bboxStr}`;
+
+  const photonRes = await fetch(photonUrl, {
     headers: { "User-Agent": "Itinerai/1.0" },
   });
 
-  if (!res.ok) return null;
+  if (!photonRes.ok) return null;
 
-  const results: NominatimResult[] = await res.json();
-  if (!results.length) return null;
+  const photonData = await photonRes.json();
+  if (!photonData.features?.length) return null;
 
-  const lat = parseFloat(results[0].lat);
-  const lng = parseFloat(results[0].lon);
-
-  // Sanity check: must be within 1.5° of city center
-  if (Math.abs(lat - cityLat) > 1.5 || Math.abs(lng - cityLng) > 1.5) return null;
-
+  const [lng, lat] = photonData.features[0].geometry.coordinates as [number, number];
   return { lat, lng };
 }
 

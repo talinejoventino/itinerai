@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { MapPin, ExternalLink, Lightbulb } from "lucide-react";
-import type { City, Activity, ActiveLocation } from "@/types";
+import type { City, Activity } from "@/types";
 
 interface ActivityItemProps {
   activity: Activity;
@@ -90,7 +90,7 @@ export default function ActivityItem({
           </div>
         )}
 
-        <div className="flex items-center flex-wrap gap-2 mt-2.5">
+        {activity.hasLocation !== false && <div className="flex items-center flex-wrap gap-2 mt-2.5">
           <motion.button
             onClick={() => onShowLocation(activity)}
             whileHover={{ background: isActive ? "rgba(74,127,167,0.3)" : "rgba(74,127,167,0.18)" }}
@@ -145,7 +145,7 @@ export default function ActivityItem({
             <ExternalLink style={{ width: 11, height: 11 }} />
             Google Maps
           </motion.a>
-        </div>
+        </div>}
       </div>
 
       <span className="shrink-0 text-base pt-0.5">{activity.emoji ?? "📌"}</span>

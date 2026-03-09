@@ -36,8 +36,9 @@ export interface Activity {
   description: string;
   tip?: string;
   emoji?: string;
-  lat?: number;  // AI-provided GPS latitude (optional)
-  lng?: number;  // AI-provided GPS longitude (optional)
+  lat?: number;
+  lng?: number;
+  hasLocation?: boolean; // true = named place that can be shown on map; false = generic activity (tour, dinner, etc.)
 }
 
 export interface DayPlan {

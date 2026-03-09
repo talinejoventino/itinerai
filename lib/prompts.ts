@@ -48,11 +48,12 @@ Return ONLY valid JSON, without any additional text, with this exact structure:
 }
 
 Important rules:
+- For "highlights": list ONLY places genuinely well-known and confirmed to exist as tourist attractions in ${city.name}. List fewer than 5 if needed — never invent or pad. Each highlight must be the exact place name only (no dashes, no descriptions).
 - For "estimatedBudgetPerPerson", provide realistic daily cost ranges in USD covering budget, mid-range, and luxury traveler profiles, including accommodation, meals, local transport, and paid attractions
 - For "style", choose all applicable tags from: Historical, Cultural, Nature, Adventure, Beach, Romantic, Gastronomy, Religious, Art & Museums, Architecture, Nightlife, Shopping, Family-friendly, Eco-tourism
 - For "bestSeason", consider local climate, crowds, and events to give practical travel timing advice
 - For "recommendedDuration", provide minimum (rushed visit), ideal (comfortable visit), and maximum (deep exploration) in number of days, with a brief justification
-- For "nearbyExcursions": if ${city.name} has limited tourist attractions OR if the destination greatly benefits from day trips to surrounding areas, include 2 to 4 nearby destinations worth visiting. These can be in the same country or in a neighboring country. If the city already has abundant attractions to fill 5+ days, you may return an empty array []
+- For "nearbyExcursions": always evaluate honestly how many days of unique attractions ${city.name} itself can fill. If the city can keep a tourist busy for fewer than 3 days, include 2–4 nearby destinations (cities, nature sites, or cross-border spots) that complement the trip. If the city has 5+ days of attractions, return [].
 - Return ONLY the JSON, without markdown, without text before or after`;
 }
 
@@ -64,24 +65,27 @@ export function buildItineraryDaysPrompt(city: City, days: 1 | 3 | 5): string {
   };
 
   const activityCounts: Record<number, string> = {
-    1: "5 to 6 activities",
-    3: "4 to 5 activities per day",
+    1: "up to 5 activities (use fewer if the city has limited confirmed attractions — never invent places to reach a minimum)",
+    3: "3 to 5 activities per day",
     5: "3 to 4 activities per day",
   };
 
   const activitySample = `{
               "time": "09:00",
-              "title": "Location name",
+              "title": "Exact place name (e.g. 'Eiffel Tower', 'Louvre Museum', 'Montmartre')",
               "description": "Description of what to do and see at this location.",
-              "tip": "Practical tip (price, hours, how to get there, reservation, etc.)",
+              "tip": "Practical tip if have (price, hours, how to get there, reservation, etc.)",
               "emoji": "🏛️",
               "lat": 48.8584,
-              "lng": 2.2945
+              "lng": 2.2945,
+              "isInBaseCity": true,
+              "hasLocation": true
             }`;
 
   const day1 = `{
           "day": 1,
           "theme": "${days === 1 ? "Essential Highlights" : "Day 1 theme"}",
+          "baseCity": "${city.name}",
           "activities": [
             ${activitySample}
           ]
@@ -91,12 +95,20 @@ export function buildItineraryDaysPrompt(city: City, days: 1 | 3 | 5): string {
         {
           "day": ${i + 2},
           "theme": "Day ${i + 2} theme",
+          "baseCity": "${city.name} or nearby destination name if this day focuses on an excursion",
           "activities": [...]
         }`).join("");
 
   return `You are a tourism expert with up-to-date knowledge about destinations around the world.
 
 Create a ${days}-day travel itinerary for **${city.name}, ${city.country}**.
+
+## CRITICAL RULE — Honesty about local attractions:
+Before building the itinerary, honestly assess how many days of REAL, confirmed tourist attractions ${city.name} itself has.
+- If ${city.name} has enough genuine attractions to fill all ${days} days, build the entire itinerary there.
+- If ${city.name} does NOT have enough real attractions to fill ${days} days, dedicate the remaining days to excursions to nearby cities, towns, or natural sites — even in neighboring countries if relevant.
+- If ${city.name} has very few genuine tourist attractions (less than half a day worth), treat a well-known nearby city as the base for the trip and include ${city.name} as a brief excursion within the itinerary.
+- NEVER invent, fabricate, or include non-tourist places (e.g. random streets, local markets with no touristic value, generic viewpoints) just to fill days. Only include places that a travel guidebook would genuinely recommend.
 
 Return ONLY valid JSON, without any additional text, with this exact structure:
 
@@ -109,10 +121,13 @@ Return ONLY valid JSON, without any additional text, with this exact structure:
 
 Important rules:
 - Include ${activityCounts[days]}
+- For days that are excursions to other cities/regions, set "baseCity" to that destination's name and set "isInBaseCity": false on each activity
 - Include relevant emojis for each activity
-- Times should be realistic and consider travel time between locations
+- Times should be realistic and consider travel time between locations (include travel as the first activity of the day when visiting another city)
 - Tips should be practical and useful (approximate prices, transportation tips, etc.)
 - Use English language
-- For each activity, include the real GPS coordinates (lat/lng) of the named place — must be accurate real-world coordinates located in or near ${city.name}. These are used to plot the route on a map
+- **title** must be the short, exact place name only — NO dashes, NO em-dashes, NO descriptions or subtitles appended to the name. Correct: "Mercado Municipal" — Wrong: "Mercado Municipal - historic market hall"
+- **hasLocation**: set to true if the activity is a specific named place that can be found on a map (museum, monument, restaurant, beach, neighborhood, park, etc.). Set to false for generic activities that have no fixed map location (e.g. "Coral Reef Snorkeling Tour", "Relax at the hotel", "Dinner at a local restaurant", "Travel by bus to X")
+- For activities where hasLocation is true, include the real GPS coordinates (lat/lng) of that exact place. For hasLocation false, you can omit lat/lng or set them to null
 - Return ONLY the JSON, without markdown, without text before or after`;
 }

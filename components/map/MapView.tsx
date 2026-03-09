@@ -14,7 +14,7 @@ import PlaceMarker from "./PlaceMarker";
 const CITY_LAYERS = ["label-capital", "label-city", "label-town"];
 
 export default function MapView() {
-  const { selectedCity, activeLocation, selectCity } = useAppStore();
+  const { selectedCity, activeLocation, panelOpen, selectCity } = useAppStore();
   const mapRef = useRef<MapRef>(null);
   const [cursor, setCursor] = useState<string>("grab");
 
@@ -36,9 +36,10 @@ export default function MapView() {
         zoom: 16,
         duration: 1200,
         essential: true,
+        padding: { right: panelOpen ? 420 : 0, top: 0, bottom: 0, left: 0 },
       });
     }
-  }, [activeLocation]);
+  }, [activeLocation, panelOpen]);
 
   const handleMouseMove = useCallback((event: MapLayerMouseEvent) => {
     if (!mapRef.current) return;
