@@ -13,6 +13,7 @@ interface AppStore {
   activeLocation: ActiveLocation | null;
 
   selectCity: (city: City) => void;
+  reset: () => void;
   setItinerary: (itinerary: PartialItinerary | null) => void;
   setAppState: (state: AppState) => void;
   setError: (error: string | null) => void;
@@ -33,6 +34,16 @@ export const useAppStore = create<AppStore>()(
       selectCity: (city) =>
         set({
           selectedCity: city,
+          itinerary: null,
+          appState: "idle",
+          error: null,
+          panelOpen: false,
+          activeLocation: null,
+        }),
+
+      reset: () =>
+        set({
+          selectedCity: null,
           itinerary: null,
           appState: "idle",
           error: null,

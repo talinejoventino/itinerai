@@ -1,17 +1,70 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Pin, Sparkles, Loader2, AlertCircle, X, MapPlus } from "lucide-react";
+import { Pin, Sparkles, Loader2, AlertCircle, X, MapPlus, Map } from "lucide-react";
 import { useAppStore } from "@/store/useAppStore";
 import { useItineraryGeneration } from "@/hooks/useItineraryGeneration";
 
 export default function CtaArea() {
-  const { selectedCity, appState, error, panelOpen, setError } = useAppStore();
+  const { selectedCity, appState, error, panelOpen, itinerary, setError, setPanelOpen, reset } = useAppStore();
   const { generate } = useItineraryGeneration();
 
   return (
     <AnimatePresence mode="wait">
-      {selectedCity && !panelOpen ? (
+      {selectedCity && !panelOpen && itinerary ? (
+        <motion.div
+          key="view"
+          className="absolute bottom-8 left-1/2 z-[500]"
+          style={{ x: "-50%" }}
+          initial={{ y: 40, opacity: 0, scale: 0.9 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          exit={{ y: 40, opacity: 0, scale: 0.9 }}
+          transition={{ duration: 0.35, ease: [0.34, 1.56, 0.64, 1] }}
+        >
+          <div className="flex flex-col items-center gap-2">
+            <motion.button
+              onClick={() => setPanelOpen(true)}
+              className="flex items-center gap-2.5 text-white font-semibold"
+              style={{
+                background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
+                borderRadius: "14px",
+                padding: "0 28px",
+                height: "52px",
+                fontSize: "15px",
+                fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
+                boxShadow: "0 0 24px rgba(74,127,167,0.35), 0 4px 20px rgba(10,25,49,0.18)",
+                border: "none",
+                cursor: "pointer",
+              }}
+              whileHover={{
+                scale: 1.02,
+                boxShadow: "0 0 32px rgba(74,127,167,0.5), 0 4px 20px rgba(10,25,49,0.25)",
+              }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 17 }}
+            >
+              <Map className="h-5 w-5" />
+              View Itinerary
+            </motion.button>
+            <button
+              onClick={reset}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                fontFamily: "var(--font-body, 'Outfit', sans-serif)",
+                fontSize: "12px",
+                color: "rgba(179,207,229,0.6)",
+                letterSpacing: "0.02em",
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = "rgba(179,207,229,0.9)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(179,207,229,0.6)")}
+            >
+              Search a new city →
+            </button>
+          </div>
+        </motion.div>
+      ) : selectedCity && !panelOpen ? (
         <motion.div
           key="cta"
           className="absolute bottom-8 left-1/2 z-[500]"

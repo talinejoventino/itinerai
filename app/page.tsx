@@ -7,7 +7,6 @@ import { useAppStore } from "@/store/useAppStore";
 import AppHeader from "@/components/layout/AppHeader";
 import CtaArea from "@/components/layout/CtaArea";
 import LoadingOverlay from "@/components/layout/LoadingOverlay";
-import ReopenTab from "@/components/layout/ReopenTab";
 import ItineraryPanel from "@/components/itinerary/ItineraryPanel";
 
 const MapView = dynamic(() => import("@/components/map/MapView"), {
@@ -41,7 +40,6 @@ export default function HomePage() {
       <AppHeader />
       <CtaArea />
       <LoadingOverlay />
-      <ReopenTab />
 
       <AnimatePresence>
         {panelOpen && itinerary && (
