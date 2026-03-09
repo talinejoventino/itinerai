@@ -27,7 +27,7 @@ export default function HomePage() {
   const { panelOpen, itinerary } = useAppStore();
 
   return (
-    <div className="relative w-screen h-screen overflow-hidden" style={{ background: "#0A1931" }}>
+    <div className="relative w-screen h-dvh overflow-hidden" style={{ background: "#0A1931" }}>
       <motion.div
         className="absolute inset-0 z-0"
         initial={{ opacity: 0 }}

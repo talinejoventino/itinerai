@@ -31,10 +31,11 @@ export default function PanelFooter({ city, itinerary, isComplete }: PanelFooter
 
   return (
     <div
-      className="shrink-0 px-5 py-4"
+      className="shrink-0 px-5 pt-4"
       style={{
         borderTop: "1px solid rgba(179,207,229,0.1)",
         background: "rgba(10,25,49,0.8)",
+        paddingBottom: "max(env(safe-area-inset-bottom), 16px)",
       }}
     >
       <button

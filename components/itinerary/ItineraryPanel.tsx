@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppStore } from "@/store/useAppStore";
 import { useLocationHandler } from "@/hooks/useLocationHandler";
@@ -15,8 +15,15 @@ export default function ItineraryPanel() {
   const { handleShowLocation } = useLocationHandler();
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [openDayIndex, setOpenDayIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const isComplete = appState === "done";
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [activeTab]);
 
   if (!selectedCity || !itinerary) return null;
 
@@ -45,7 +52,7 @@ export default function ItineraryPanel() {
         isComplete={isComplete}
       />
 
-      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden" style={{ overflowAnchor: "none" }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
