@@ -54,11 +54,12 @@ export default function CtaArea() {
                 cursor: "pointer",
                 fontFamily: "var(--font-body, 'Outfit', sans-serif)",
                 fontSize: "12px",
-                color: "rgba(179,207,229,0.6)",
+                color: "rgba(179,207,229,0.85)",
                 letterSpacing: "0.02em",
+                textShadow: "0 1px 6px rgba(10,25,49,0.8)",
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "rgba(179,207,229,0.9)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(179,207,229,0.6)")}
+              onMouseEnter={e => (e.currentTarget.style.color = "rgba(179,207,229,1)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "rgba(179,207,229,0.85)")}
             >
               Search a new city →
             </button>

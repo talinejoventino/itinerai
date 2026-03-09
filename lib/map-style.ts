@@ -15,8 +15,9 @@ const DS = {
   borderFaint:"rgba(10,25,49,0.10)",
   roadMajor:  "#7EAABF",
   roadMinor:  "#8EB8CC",
-  labelCountry: "rgba(240,250,255,0.92)", // claro p/ leitura em fundo mais escuro
-  labelCity:    "rgba(240,250,255,0.95)",
+  labelCountry: "rgba(179,207,229,0.40)", // mist bem apagado — fundo geográfico
+  labelCity:    "#FFFFFF",               // branco puro — máximo contraste na paleta
+  labelCityGlow: "rgba(8, 39, 88, 0.92)",  // deep-navy opaco — outline nítido
   labelMuted:   "rgba(200,228,245,0.75)",
   labelWater:   "rgba(200,228,245,0.70)",
   halo:       "rgba(45,81,108,0.45)",
@@ -266,17 +267,17 @@ export const itineraiMapStyle: StyleSpecification = {
       filter: ["==", "class", "country"],
       layout: {
         "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
-        "text-font": FONT_BOLD,
-        "text-size": ["interpolate", ["linear"], ["zoom"], 2, 10, 5, 13, 8, 16],
-        "text-letter-spacing": 0.1,
+        "text-font": FONT,
+        "text-size": ["interpolate", ["linear"], ["zoom"], 2, 9, 5, 11, 8, 13],
+        "text-letter-spacing": 0.12,
         "text-transform": "uppercase",
         "text-max-width": 8,
       },
       paint: {
         "text-color": DS.labelCountry,
         "text-halo-color": DS.halo,
-        "text-halo-width": 1.5,
-        "text-opacity": ["interpolate", ["linear"], ["zoom"], 1, 0.8, 6, 1],
+        "text-halo-width": 1,
+        "text-opacity": ["interpolate", ["linear"], ["zoom"], 1, 0.6, 6, 0.7],
       },
     },
 
@@ -315,14 +316,15 @@ export const itineraiMapStyle: StyleSpecification = {
       layout: {
         "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
         "text-font": FONT_BOLD,
-        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 10, 8, 14],
+        "text-size": ["interpolate", ["linear"], ["zoom"], 3, 11, 8, 15],
         "text-anchor": "bottom",
         "text-offset": [0, -0.3],
       },
       paint: {
-        "text-color": "#E8F4FF",
-        "text-halo-color": DS.halo,
-        "text-halo-width": 1.5,
+        "text-color": DS.labelCity,
+        "text-halo-color": DS.labelCityGlow,
+        "text-halo-width": 2,
+        "text-halo-blur": 0,
       },
     },
 
@@ -336,14 +338,15 @@ export const itineraiMapStyle: StyleSpecification = {
       minzoom: 5,
       layout: {
         "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
-        "text-font": FONT,
-        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 10, 10, 14],
+        "text-font": FONT_BOLD,
+        "text-size": ["interpolate", ["linear"], ["zoom"], 5, 11, 10, 14],
         "text-max-width": 8,
       },
       paint: {
         "text-color": DS.labelCity,
-        "text-halo-color": DS.halo,
-        "text-halo-width": 1.5,
+        "text-halo-color": DS.labelCityGlow,
+        "text-halo-width": 2,
+        "text-halo-blur": 0,
       },
     },
 
@@ -357,13 +360,14 @@ export const itineraiMapStyle: StyleSpecification = {
       minzoom: 9,
       layout: {
         "text-field": ["coalesce", ["get", "name:en"], ["get", "name"]],
-        "text-font": FONT,
+        "text-font": FONT_BOLD,
         "text-size": ["interpolate", ["linear"], ["zoom"], 9, 10, 14, 13],
       },
       paint: {
-        "text-color": "rgba(220,240,255,0.80)",
-        "text-halo-color": DS.halo,
-        "text-halo-width": 1,
+        "text-color": DS.labelCity,
+        "text-halo-color": DS.labelCityGlow,
+        "text-halo-width": 1.5,
+        "text-halo-blur": 0,
       },
     },
 
