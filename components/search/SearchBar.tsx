@@ -106,7 +106,7 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
             paddingRight: "52px",
             height: "56px",
             fontFamily: "var(--font-body, 'Outfit', sans-serif)",
-            fontSize: "15px",
+            fontSize: "16px",
             color: "#F6FAFD",
           }}
           autoComplete="off"
