@@ -72,7 +72,7 @@ export function buildItineraryDaysPrompt(city: City, days: 1 | 3 | 5): string {
 
   const activitySample = `{
               "time": "09:00",
-              "title": "Exact place name (e.g. 'Eiffel Tower', 'Louvre Museum', 'Montmartre')",
+              "title": "EXACT official name as it appears on maps — must exist and be verifiable (e.g. 'Eiffel Tower', 'Louvre Museum', 'Montmartre')",
               "description": "Description of what to do and see at this location.",
               "tip": "Practical tip if have (price, hours, how to get there, reservation, etc.)",
               "emoji": "🏛️",
@@ -109,6 +109,10 @@ Before building the itinerary, honestly assess how many days of REAL, confirmed 
 - If ${city.name} does NOT have enough real attractions to fill ${days} days, dedicate the remaining days to excursions to nearby cities, towns, or natural sites — even in neighboring countries if relevant.
 - If ${city.name} has very few genuine tourist attractions (less than half a day worth), treat a well-known nearby city as the base for the trip and include ${city.name} as a brief excursion within the itinerary.
 - NEVER invent, fabricate, or include non-tourist places (e.g. random streets, local markets with no touristic value, generic viewpoints) just to fill days. Only include places that a travel guidebook would genuinely recommend.
+- Before adding any place, ask yourself: "Am I 100% certain this exact place exists in this city with this exact name?" If there is any doubt, skip it or replace it with a place you are more certain about.
+- Prefer internationally recognized attractions. When in doubt, always choose the more famous, well-documented place over an obscure one.
+- Do NOT invent generic-sounding names like "Historic Cultural Center", "Old City Market Square", "Municipal Heritage Museum", "City Cultural Park" — these are common hallucination patterns. Only use the real, specific official name.
+- Every place you include must be verifiable on Google Maps or TripAdvisor with that exact name.
 
 Return ONLY valid JSON, without any additional text, with this exact structure:
 
@@ -129,5 +133,6 @@ Important rules:
 - **title** must be the short, exact place name only — NO dashes, NO em-dashes, NO descriptions or subtitles appended to the name. Correct: "Mercado Municipal" — Wrong: "Mercado Municipal - historic market hall"
 - **hasLocation**: set to true if the activity is a specific named place that can be found on a map (museum, monument, restaurant, beach, neighborhood, park, etc.). Set to false for generic activities that have no fixed map location (e.g. "Coral Reef Snorkeling Tour", "Relax at the hotel", "Dinner at a local restaurant", "Travel by bus to X")
 - For activities where hasLocation is true, include the real GPS coordinates (lat/lng) of that exact place. For hasLocation false, you can omit lat/lng or set them to null
+- If you are not highly confident a place exists with that exact name, omit it — it is better to include fewer places than to invent one
 - Return ONLY the JSON, without markdown, without text before or after`;
 }
