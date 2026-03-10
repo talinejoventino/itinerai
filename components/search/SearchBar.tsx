@@ -23,6 +23,8 @@ export default function SearchBar({ onCitySelect, selectedCity }: SearchBarProps
     if (selectedCity) {
       setQuery(`${selectedCity.name}, ${selectedCity.country}`);
       setOpen(false);
+    } else {
+      setQuery("");
     }
   }, [selectedCity]);
 

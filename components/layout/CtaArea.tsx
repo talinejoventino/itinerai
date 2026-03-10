@@ -5,6 +5,12 @@ import { Pin, Sparkles, Loader2, AlertCircle, X, MapPlus, Map } from "lucide-rea
 import { useAppStore } from "@/store/useAppStore";
 import { useItineraryGeneration } from "@/hooks/useItineraryGeneration";
 
+const FONT_DISPLAY = { fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)" };
+const FONT_BODY = { fontFamily: "var(--font-body, 'Outfit', sans-serif)" };
+
+const BTN_SHADOW = "0 0 24px rgba(74,127,167,0.35), 0 4px 20px rgba(10,25,49,0.18)";
+const BTN_SHADOW_HOVER = "0 0 32px rgba(74,127,167,0.5), 0 4px 20px rgba(10,25,49,0.25)";
+
 export default function CtaArea() {
   const { selectedCity, appState, error, panelOpen, itinerary, setError, setPanelOpen, reset } = useAppStore();
   const { generate } = useItineraryGeneration();
@@ -24,22 +30,9 @@ export default function CtaArea() {
           <div className="flex flex-col items-center gap-2">
             <motion.button
               onClick={() => setPanelOpen(true)}
-              className="flex items-center gap-2.5 text-white font-semibold"
-              style={{
-                background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
-                borderRadius: "14px",
-                padding: "0 28px",
-                height: "52px",
-                fontSize: "15px",
-                fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
-                boxShadow: "0 0 24px rgba(74,127,167,0.35), 0 4px 20px rgba(10,25,49,0.18)",
-                border: "none",
-                cursor: "pointer",
-              }}
-              whileHover={{
-                scale: 1.02,
-                boxShadow: "0 0 32px rgba(74,127,167,0.5), 0 4px 20px rgba(10,25,49,0.25)",
-              }}
+              className="flex items-center gap-2.5 text-white font-semibold text-[15px] h-[52px] px-7 rounded-[14px] cursor-pointer border-0 bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63]"
+              style={{ ...FONT_DISPLAY, boxShadow: BTN_SHADOW }}
+              whileHover={{ scale: 1.02, boxShadow: BTN_SHADOW_HOVER }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
@@ -48,20 +41,10 @@ export default function CtaArea() {
             </motion.button>
             <button
               onClick={reset}
-              style={{
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                fontFamily: "var(--font-body, 'Outfit', sans-serif)",
-                fontSize: "12px",
-                color: "rgba(179,207,229,0.85)",
-                letterSpacing: "0.02em",
-                textShadow: "0 1px 6px rgba(10,25,49,0.8)",
-              }}
-              onMouseEnter={e => (e.currentTarget.style.color = "rgba(179,207,229,1)")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(179,207,229,0.85)")}
+              className="rounded-full cursor-pointer text-[13px] font-medium text-[#F6FAFD] tracking-[0.02em] py-1.5 px-4 bg-white/[0.12] border border-white/[0.35] backdrop-blur-sm shadow-[0_2px_10px_rgba(10,25,49,0.25)] transition-colors hover:bg-white/[0.22] hover:border-white/[0.6]"
+              style={FONT_BODY}
             >
-              Search a new city →
+              Search a new city
             </button>
           </div>
         </motion.div>
@@ -77,19 +60,8 @@ export default function CtaArea() {
         >
           <div className="flex flex-col items-center gap-3">
             <div
-              className="flex items-center gap-2 px-5 py-2"
-              style={{
-                background: "rgba(246,250,253,0.1)",
-                backdropFilter: "blur(20px)",
-                WebkitBackdropFilter: "blur(20px)",
-                border: "1px solid rgba(179,207,229,0.2)",
-                borderRadius: "999px",
-                boxShadow: "0 4px 20px rgba(10,25,49,0.18)",
-                fontFamily: "var(--font-body, 'Outfit', sans-serif)",
-                fontSize: "13px",
-                fontWeight: 500,
-                color: "#fff",
-              }}
+              className="flex items-center gap-2 px-5 py-2 rounded-full text-[13px] font-medium text-white bg-white/10 backdrop-blur-xl border border-[rgba(179,207,229,0.2)] shadow-[0_4px_20px_rgba(10,25,49,0.18)]"
+              style={FONT_BODY}
             >
               <Pin size={14} color="#fff" />
               <span>
@@ -103,14 +75,8 @@ export default function CtaArea() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="flex items-center gap-2 px-4 py-2.5 text-sm max-w-sm"
-                  style={{
-                    background: "rgba(220,38,38,0.15)",
-                    border: "1px solid rgba(220,38,38,0.3)",
-                    borderRadius: "14px",
-                    color: "#fca5a5",
-                    fontFamily: "var(--font-body, 'Outfit', sans-serif)",
-                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 text-sm max-w-sm rounded-[14px] text-[#fca5a5] bg-red-600/15 border border-red-600/30"
+                  style={FONT_BODY}
                 >
                   <AlertCircle className="h-4 w-4 shrink-0" />
                   <span>{error}</span>
@@ -127,23 +93,9 @@ export default function CtaArea() {
             <motion.button
               onClick={generate}
               disabled={appState === "loading"}
-              className="flex items-center gap-2.5 text-white font-semibold disabled:opacity-70"
-              style={{
-                background: "linear-gradient(135deg, #4A7FA7 0%, #1A3D63 100%)",
-                borderRadius: "14px",
-                padding: "0 28px",
-                height: "52px",
-                fontSize: "15px",
-                fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
-                boxShadow: "0 0 24px rgba(74,127,167,0.35), 0 4px 20px rgba(10,25,49,0.18)",
-                border: "none",
-                cursor: appState === "loading" ? "not-allowed" : "pointer",
-              }}
-              whileHover={{
-                scale: 1.02,
-                boxShadow:
-                  "0 0 32px rgba(74,127,167,0.5), 0 4px 20px rgba(10,25,49,0.25)",
-              }}
+              className={`flex items-center gap-2.5 text-white font-semibold text-[15px] h-[52px] px-7 rounded-[14px] border-0 bg-gradient-to-br from-[#4A7FA7] to-[#1A3D63] disabled:opacity-70 ${appState === "loading" ? "cursor-not-allowed" : "cursor-pointer"}`}
+              style={{ ...FONT_DISPLAY, boxShadow: BTN_SHADOW }}
+              whileHover={{ scale: 1.02, boxShadow: BTN_SHADOW_HOVER }}
               whileTap={{ scale: 0.98 }}
               transition={{ type: "spring", stiffness: 400, damping: 17 }}
             >
@@ -172,20 +124,8 @@ export default function CtaArea() {
           transition={{ duration: 0.4, delay: 0.6 }}
         >
           <div
-            className="flex items-center gap-2 px-6 py-3.5 text-center"
-            style={{
-              background: "rgba(246,250,253,0.08)",
-              backdropFilter: "blur(20px)",
-              WebkitBackdropFilter: "blur(20px)",
-              border: "1px solid rgba(179,207,229,0.15)",
-              borderRadius: "20px",
-              boxShadow: "0 4px 20px rgba(10,25,49,0.18)",
-              fontFamily: "var(--font-body, 'Outfit', sans-serif)",
-              fontSize: "14px",
-              fontWeight: 500,
-              color: "rgba(179,207,229,0.7)",
-              whiteSpace: "nowrap",
-            }}
+            className="flex items-center gap-2 px-6 py-3.5 text-center text-sm font-medium whitespace-nowrap rounded-[20px] text-[rgba(179,207,229,0.7)] bg-white/[0.08] backdrop-blur-xl border border-[rgba(179,207,229,0.15)] shadow-[0_4px_20px_rgba(10,25,49,0.18)]"
+            style={FONT_BODY}
           >
             <MapPlus /> Click on a city name on the map
           </div>
