@@ -41,8 +41,9 @@ export function useLocationHandler() {
       if (!selectedCity) return;
 
       // 1. Geocoding by name — most accurate for named places
+      // Prefer localName (local language) for better OSM/Photon match accuracy
       const geocoded = await geocodeWithFallback(
-        activity.title,
+        activity.localName ?? activity.title,
         selectedCity.name,
         selectedCity.lat,
         selectedCity.lng

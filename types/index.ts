@@ -33,6 +33,7 @@ export interface NominatimResult {
 export interface Activity {
   time: string;
   title: string;
+  localName?: string; // official name in the local language, used for geocoding
   description: string;
   tip?: string;
   emoji?: string;

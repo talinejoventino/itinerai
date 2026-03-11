@@ -73,6 +73,7 @@ export function buildItineraryDaysPrompt(city: City, days: 1 | 3 | 5): string {
   const activitySample = `{
               "time": "09:00",
               "title": "EXACT official name as it appears on maps — must exist and be verifiable (e.g. 'Eiffel Tower', 'Louvre Museum', 'Montmartre')",
+              "localName": "Official name in the local language as it appears on OSM/local maps (e.g. 'Musée du Louvre', 'Torre Eiffel'). If hasLocation is false, omit this field.",
               "description": "Description of what to do and see at this location.",
               "tip": "Practical tip if have (price, hours, how to get there, reservation, etc.)",
               "emoji": "🏛️",
@@ -132,6 +133,7 @@ Important rules:
 - Use English language
 - **title** must be the short, exact place name only — NO dashes, NO em-dashes, NO descriptions or subtitles appended to the name. Correct: "Mercado Municipal" — Wrong: "Mercado Municipal - historic market hall"
 - **hasLocation**: set to true if the activity is a specific named place that can be found on a map (museum, monument, restaurant, beach, neighborhood, park, etc.). Set to false for generic activities that have no fixed map location (e.g. "Coral Reef Snorkeling Tour", "Relax at the hotel", "Dinner at a local restaurant", "Travel by bus to X")
+- **localName**: when hasLocation is true, provide the official name of the place in the local language of the destination, exactly as it appears on local maps and OpenStreetMap (e.g. "Museo Nacional del Prado" for "Prado Museum", "筑地市場" for "Tsukiji Market"). If the title is already in the local language, repeat it. Omit this field when hasLocation is false.
 - For activities where hasLocation is true, include the real GPS coordinates (lat/lng) of that exact place. For hasLocation false, you can omit lat/lng or set them to null
 - If you are not highly confident a place exists with that exact name, omit it — it is better to include fewer places than to invent one
 - Return ONLY the JSON, without markdown, without text before or after`;
