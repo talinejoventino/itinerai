@@ -13,6 +13,7 @@ interface DayCardProps {
   city: City;
   onShowLocation: (activity: Activity) => void;
   activeLocation: ActiveLocation | null;
+  loadingTitle: string | null;
 }
 
 export default function DayCard({
@@ -23,6 +24,7 @@ export default function DayCard({
   city,
   onShowLocation,
   activeLocation,
+  loadingTitle,
 }: DayCardProps) {
   return (
     <div
@@ -129,6 +131,7 @@ export default function DayCard({
                   city={city}
                   onShowLocation={onShowLocation}
                   isActive={activeLocation?.title === activity.title}
+                  isLoading={loadingTitle === activity.title}
                 />
               ))}
             </div>

@@ -12,7 +12,7 @@ import ItineraryTab from "./ItineraryTab";
 
 export default function ItineraryPanel() {
   const { selectedCity, itinerary, appState, activeLocation, setPanelOpen } = useAppStore();
-  const { handleShowLocation } = useLocationHandler();
+  const { handleShowLocation, loadingTitle } = useLocationHandler();
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [openDayIndex, setOpenDayIndex] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -71,6 +71,7 @@ export default function ItineraryPanel() {
                 city={selectedCity}
                 onShowLocation={handleShowLocation}
                 activeLocation={activeLocation}
+                loadingTitle={loadingTitle}
               />
             )}
           </motion.div>

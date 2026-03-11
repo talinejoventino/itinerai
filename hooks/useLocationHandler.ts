@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useAppStore } from "@/store/useAppStore";
 import { geocodePlace } from "@/lib/nominatim";
 import type { Activity } from "@/types";
@@ -35,10 +35,12 @@ async function geocodeWithFallback(
 
 export function useLocationHandler() {
   const { selectedCity, setActiveLocation, activeLocation } = useAppStore();
+  const [loadingTitle, setLoadingTitle] = useState<string | null>(null);
 
   const handleShowLocation = useCallback(
     async (activity: Activity) => {
       if (!selectedCity) return;
+      setLoadingTitle(activity.title);
 
       // 1. Geocoding by name — most accurate for named places
       // Prefer localName (local language) for better OSM/Photon match accuracy
@@ -53,6 +55,7 @@ export function useLocationHandler() {
 
       if (geocoded) {
         setActiveLocation({ lat: geocoded.lat, lng: geocoded.lng, title: activity.title, emoji: activity.emoji });
+        setLoadingTitle(null);
         return;
       }
 
@@ -67,14 +70,16 @@ export function useLocationHandler() {
         Math.abs(aiLng - selectedCity.lng) <= 0.3
       ) {
         setActiveLocation({ lat: aiLat, lng: aiLng, title: activity.title, emoji: activity.emoji });
+        setLoadingTitle(null);
         return;
       }
 
       // 3. City center — last resort
       setActiveLocation({ lat: selectedCity.lat, lng: selectedCity.lng, title: activity.title, emoji: activity.emoji });
+      setLoadingTitle(null);
     },
     [selectedCity, setActiveLocation]
   );
 
-  return { handleShowLocation };
+  return { handleShowLocation, loadingTitle };
 }

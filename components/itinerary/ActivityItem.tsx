@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, ExternalLink, Lightbulb } from "lucide-react";
+import { MapPin, ExternalLink, Lightbulb, Loader2 } from "lucide-react";
 import type { City, Activity } from "@/types";
 
 interface ActivityItemProps {
@@ -10,6 +10,7 @@ interface ActivityItemProps {
   city: City;
   onShowLocation: (activity: Activity) => void;
   isActive: boolean;
+  isLoading: boolean;
 }
 
 export default function ActivityItem({
@@ -18,6 +19,7 @@ export default function ActivityItem({
   city,
   onShowLocation,
   isActive,
+  isLoading,
 }: ActivityItemProps) {
   const googleMapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
     activity.title + ", " + city.name
@@ -92,9 +94,9 @@ export default function ActivityItem({
 
         {activity.hasLocation !== false && <div className="flex items-center flex-wrap gap-2 mt-2.5">
           <motion.button
-            onClick={() => onShowLocation(activity)}
+            onClick={() => !isLoading && onShowLocation(activity)}
             whileHover={{ background: isActive ? "rgba(74,127,167,0.3)" : "rgba(74,127,167,0.18)" }}
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: isLoading ? 1 : 0.95 }}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -109,12 +111,15 @@ export default function ActivityItem({
               fontSize: 11,
               fontWeight: 600,
               fontFamily: "var(--font-display, 'Plus Jakarta Sans', sans-serif)",
-              cursor: "pointer",
+              cursor: isLoading ? "default" : "pointer",
               transition: "all 150ms ease",
             }}
           >
-            <MapPin style={{ width: 11, height: 11 }} />
-            {isActive ? "No mapa" : "Ver no mapa"}
+            {isLoading
+              ? <Loader2 style={{ width: 11, height: 11 }} className="animate-spin" />
+              : <MapPin style={{ width: 11, height: 11 }} />
+            }
+            {isLoading ? "Buscando..." : isActive ? "No mapa" : "Ver no mapa"}
           </motion.button>
 
           <motion.a

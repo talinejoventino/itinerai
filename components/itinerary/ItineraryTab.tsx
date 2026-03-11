@@ -11,6 +11,7 @@ interface ItineraryTabProps {
   city: City;
   onShowLocation: (activity: Activity) => void;
   activeLocation: ActiveLocation | null;
+  loadingTitle: string | null;
 }
 
 export default function ItineraryTab({
@@ -20,6 +21,7 @@ export default function ItineraryTab({
   city,
   onShowLocation,
   activeLocation,
+  loadingTitle,
 }: ItineraryTabProps) {
   if (!data) return <TabSkeleton />;
 
@@ -46,6 +48,7 @@ export default function ItineraryTab({
           city={city}
           onShowLocation={onShowLocation}
           activeLocation={activeLocation}
+          loadingTitle={loadingTitle}
         />
       ))}
     </div>
